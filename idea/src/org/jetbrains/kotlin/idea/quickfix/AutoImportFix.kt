@@ -42,9 +42,11 @@ import org.jetbrains.kotlin.idea.caches.resolve.getResolveScope
 import org.jetbrains.kotlin.idea.codeInsight.DescriptorToSourceUtilsIde
 import org.jetbrains.kotlin.idea.core.KotlinIndicesHelper
 import org.jetbrains.kotlin.idea.core.isVisible
+import org.jetbrains.kotlin.idea.imports.importableFqName
 import org.jetbrains.kotlin.idea.project.ProjectStructureUtil
 import org.jetbrains.kotlin.idea.util.CallTypeAndReceiver
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.isImportDirectiveExpression
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
@@ -165,10 +167,11 @@ internal abstract class AutoImportFixBase<T: KtExpression>(expression: T) :
 
         result.addAll(indicesHelper.getCallableTopLevelExtensions(callTypeAndReceiver, element, bindingContext) { it == nameStr })
 
-        return if (result.size > 1)
-            reduceCandidatesBasedOnDependencyRuleViolation(result, file)
+        val noRootVariants = result.filterNot { it.importableFqName?.parentOrNull()?.isRoot ?: true }
+        return if (noRootVariants.size > 1)
+            reduceCandidatesBasedOnDependencyRuleViolation(noRootVariants, file)
         else
-            result
+            noRootVariants
     }
 
     private fun reduceCandidatesBasedOnDependencyRuleViolation(
