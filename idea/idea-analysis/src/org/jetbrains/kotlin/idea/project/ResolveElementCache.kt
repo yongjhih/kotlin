@@ -139,6 +139,11 @@ class ResolveElementCache(
             }
 
             BodyResolveMode.PARTIAL -> {
+                if (contextElement.parent is KtPropertyDelegate) {
+                    // Nothing can be win from partial resolve as the only statement should be resolved
+                    return getElementAdditionalResolve(resolveElement, contextElement, BodyResolveMode.FULL)
+                }
+                
                 if (resolveElement !is KtDeclaration) {
                     return getElementAdditionalResolve(resolveElement, contextElement, BodyResolveMode.FULL)
                 }
