@@ -201,7 +201,8 @@ public class TypeCheckingProcedure {
             return true;
         }
 
-        if (!supertype.isMarkedNullable() && subtype.isMarkedNullable()) {
+        // Maybe isMarkedNullable is enough
+        if (!TypeUtils.isNullableType(supertype) && subtype.isMarkedNullable()) {
             return false;
         }
 
@@ -214,7 +215,8 @@ public class TypeCheckingProcedure {
             return constraints.noCorrespondingSupertype(subtype, supertype); // if this returns true, there still isn't any supertype to continue with
         }
 
-        if (!supertype.isMarkedNullable() && closestSupertype.isMarkedNullable()) {
+        // Maybe isMarkedNullable is enough
+        if (!TypeUtils.isNullableType(supertype) && closestSupertype.isMarkedNullable()) {
             return false;
         }
 
