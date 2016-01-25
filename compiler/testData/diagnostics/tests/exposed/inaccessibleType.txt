@@ -1,0 +1,17 @@
+package
+
+package k {
+    public val d1: j.Derived1
+    public val d2: j.Derived2
+    public val test1: j.Base
+    public val test2: j.Base
+    public val test3: j.Impl
+    public val test4: j.Base
+    public val test5: j.Impl
+    public val test6: j.Base
+    public val test7: j.Base
+    public val test8: j.Impl
+    public val test9: j.Base
+    public fun </*0*/ T> select(/*0*/ x1: T, /*1*/ x2: T): T
+    public fun </*0*/ T> selectn(/*0*/ vararg xx: T /*kotlin.Array<out T>*/): T
+}
