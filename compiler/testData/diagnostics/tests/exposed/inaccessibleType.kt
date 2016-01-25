@@ -1,4 +1,4 @@
-// !DIAGNOSTICS: -USELESS_CAST -UNUSED_PARAMETER
+// !DIAGNOSTICS: -USELESS_CAST -UNUSED_PARAMETER -UNUSED_VARIABLE
 
 // FILE: j/Base.java
 package j;
@@ -33,13 +33,30 @@ val d2 = Derived2()
 
 fun <T> select(x1: T, x2: T) = x1
 fun <T> selectn(vararg xx: T) = xx[0]
+fun <T : Base> foo(x: T) = x.foo()
 
-val test1: Base = <!INACCESSIBLE_TYPE!>if (true) d1 else d2<!>
-val test2 = if (true) d1 as Base else d2
-<!EXPOSED_PROPERTY_TYPE!>val test3 = <!INACCESSIBLE_TYPE!>when { true -> d1; else -> d2 }<!><!>
-val test4 = when { true -> d1 as Base; else -> d2 }
-<!EXPOSED_PROPERTY_TYPE!>val test5 = <!INACCESSIBLE_TYPE!>select(d1, d2)<!><!>
-val test6 = select<Base>(d1, d2)
-val test7 = select(d1 as Base, d2)
-<!EXPOSED_PROPERTY_TYPE!>val test8 = <!INACCESSIBLE_TYPE!>selectn(d1, d2)<!><!>
-val test9 = selectn<Base>(d1, d2)
+fun test1() {
+    val test1: Base = <!INACCESSIBLE_TYPE!>if (true) d1 else d2<!>
+    val test2 = if (true) d1 as Base else d2
+    val test3 = <!INACCESSIBLE_TYPE!>when {
+        true -> d1
+        else -> d2
+    }<!>
+    val test4 = when {
+        true -> d1 as Base
+        else -> d2
+    }
+    val test5 = <!INACCESSIBLE_TYPE!>select(d1, d2)<!>
+    val test6 = select<Base>(d1, d2)
+    val test7 = select(d1 as Base, d2)
+    val test8 = <!INACCESSIBLE_TYPE!>selectn(d1, d2)<!>
+    val test9 = selectn<Base>(d1, d2)
+}
+
+fun test2() {
+    // The following is Ok in Java, but is an error in Kotlin.
+    // TODO do not generate unneeded CHECKCASTs.
+    // TODO do not report INACCESSIBLE_TYPE for corresponding cases.
+    <!INACCESSIBLE_TYPE!>select(d1, d2)<!>
+    foo(<!INACCESSIBLE_TYPE!>select(d1, d2)<!>)
+}
