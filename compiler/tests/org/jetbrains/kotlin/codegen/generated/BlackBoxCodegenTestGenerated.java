@@ -2760,36 +2760,6 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
                 KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/box/defaultArguments/function"), Pattern.compile("^(.+)\\.kt$"), true);
             }
 
-            @TestMetadata("augmentedAssignment.kt")
-            public void testAugmentedAssignment() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/augmentedAssignment.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("augmentedAssignmentViaBinaryExpression.kt")
-            public void testAugmentedAssignmentViaBinaryExpression() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/augmentedAssignmentViaBinaryExpression.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("binaryCall.kt")
-            public void testBinaryCall() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/binaryCall.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("binaryExpression.kt")
-            public void testBinaryExpression() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/binaryExpression.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("contains.kt")
-            public void testContains() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/contains.kt");
-                doTest(fileName);
-            }
-
             @TestMetadata("covariantOverride.kt")
             public void testCovariantOverride() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/box/defaultArguments/function/covariantOverride.kt");
