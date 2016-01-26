@@ -158,6 +158,7 @@ open class IncrementalCacheImpl<Target>(
             KotlinClassHeader.Kind.FILE_FACADE -> {
                 assert(sourceFiles.size == 1) { "Package part from several source files: $sourceFiles" }
                 packagePartMap.addPackagePart(className)
+                classFqNameToSourceMap.remove(className.fqNameForClassNameWithoutDollars)
 
                 protoMap.process(kotlinClass, isPackage = true) +
                 constantsMap.process(kotlinClass) +
@@ -190,6 +191,7 @@ open class IncrementalCacheImpl<Target>(
             KotlinClassHeader.Kind.CLASS -> {
                 assert(sourceFiles.size == 1) { "Class is expected to have only one source file: $sourceFiles" }
                 addToClassStorage(kotlinClass, sourceFiles.first())
+                packagePartMap.remove(className)
 
                 protoMap.process(kotlinClass, isPackage = false) +
                 constantsMap.process(kotlinClass) +
@@ -377,14 +379,15 @@ open class IncrementalCacheImpl<Target>(
             if (oldData == null || !checkChangesIsOpenPart) return CompilationResult(protoChanged = true)
 
             val difference = difference(oldData, data)
-            val fqName = if (isPackage) className.packageFqName else className.fqNameForClassNameWithoutDollars
             val changeList = SmartList<ChangeInfo>()
 
             if (difference.isClassAffected) {
+                val fqName = className.fqNameForClassNameWithoutDollars
                 changeList.add(ChangeInfo.SignatureChanged(fqName, difference.areSubclassesAffected))
             }
 
             if (difference.changedMembersNames.isNotEmpty()) {
+                val fqName = if (isPackage) className.packageFqName else className.fqNameForClassNameWithoutDollars
                 changeList.add(ChangeInfo.MembersChanged(fqName, difference.changedMembersNames))
             }
 

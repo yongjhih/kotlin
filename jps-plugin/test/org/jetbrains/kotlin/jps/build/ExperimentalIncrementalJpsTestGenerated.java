@@ -1075,6 +1075,12 @@ public class ExperimentalIncrementalJpsTestGenerated extends AbstractExperimenta
             doTest(fileName);
         }
 
+        @TestMetadata("classToFileFacade")
+        public void testClassToFileFacade() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/classHierarchyAffected/classToFileFacade/");
+            doTest(fileName);
+        }
+
         @TestMetadata("classToPackageFacade")
         public void testClassToPackageFacade() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/classHierarchyAffected/classToPackageFacade/");
@@ -1120,6 +1126,12 @@ public class ExperimentalIncrementalJpsTestGenerated extends AbstractExperimenta
         @TestMetadata("enumMemberChanged")
         public void testEnumMemberChanged() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/classHierarchyAffected/enumMemberChanged/");
+            doTest(fileName);
+        }
+
+        @TestMetadata("fileFacadeToClass")
+        public void testFileFacadeToClass() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("jps-plugin/testData/incremental/classHierarchyAffected/fileFacadeToClass/");
             doTest(fileName);
         }
 

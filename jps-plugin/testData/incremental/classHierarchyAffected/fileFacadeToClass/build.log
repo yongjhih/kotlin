@@ -1,0 +1,18 @@
+Cleaning output files:
+out/production/module/A.class
+out/production/module/META-INF/module.kotlin_module
+End of files
+Compiling files:
+src/A.kt
+End of files
+
+
+Cleaning output files:
+out/production/module/META-INF/module.kotlin_module
+out/production/module/UseFKt.class
+out/production/module/UseGKt.class
+End of files
+Compiling files:
+src/useF.kt
+src/useG.kt
+End of files
