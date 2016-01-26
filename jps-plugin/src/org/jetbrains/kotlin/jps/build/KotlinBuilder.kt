@@ -494,11 +494,9 @@ class KotlinBuilder : ModuleLevelBuilder(BuilderCategory.SOURCE_PROCESSOR) {
             sourceFiles.removeAll(targetDirtyFiles[generatedClass.target] ?: emptySet())
             sourceFiles.addAll(generatedClass.sourceFiles)
 
-            val c = 0
-
             callback.associate(
-                    FileUtil.toSystemIndependentName(generatedClass.outputFile.absolutePath),
-                    sourceFiles.map { FileUtil.toSystemIndependentName(it.absolutePath) },
+                    FileUtil.toSystemIndependentName(generatedClass.outputFile.canonicalPath),
+                    sourceFiles.map { FileUtil.toSystemIndependentName(it.canonicalPath) },
                     ClassReader(generatedClass.outputClass.fileContents)
             )
         }

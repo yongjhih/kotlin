@@ -688,7 +688,8 @@ open class IncrementalCacheImpl<Target>(
     protected open fun processChangedInlineFunctions(
             className: JvmClassName,
             changedFunctions: Collection<String>
-    ) {}
+    ) {
+    }
 }
 
 sealed class ChangeInfo(val fqName: FqName) {
