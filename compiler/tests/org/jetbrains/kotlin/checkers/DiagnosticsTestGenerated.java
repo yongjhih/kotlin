@@ -3438,6 +3438,18 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                 doTest(fileName);
             }
 
+            @TestMetadata("specialConstructsAndPlatformTypes.kt")
+            public void testSpecialConstructsAndPlatformTypes() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/controlStructures/specialConstructsAndPlatformTypes.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("specialConstructsWithNullableExpectedType.kt")
+            public void testSpecialConstructsWithNullableExpectedType() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/controlStructures/specialConstructsWithNullableExpectedType.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("tryReturnType.kt")
             public void testTryReturnType() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/controlStructures/tryReturnType.kt");
@@ -18711,6 +18723,18 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
             @TestMetadata("kt10439.kt")
             public void testKt10439() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/when/kt10439.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("kt10809.kt")
+            public void testKt10809() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/when/kt10809.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("kt10811.kt")
+            public void testKt10811() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/when/kt10811.kt");
                 doTest(fileName);
             }
 
