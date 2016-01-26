@@ -172,7 +172,7 @@ open class IncrementalCacheImpl<Target>(
                 // because we don't write proto for multifile facades.
                 // As a workaround we can remove proto values for multifile facades.
                 protoMap.remove(className)
-                classFqNameToSourceMap.remove(className)
+                classFqNameToSourceMap.remove(className.fqNameForClassNameWithoutDollars)
 
                 // TODO NO_CHANGES? (delegates only)
                 constantsMap.process(kotlinClass) +
@@ -521,17 +521,12 @@ open class IncrementalCacheImpl<Target>(
     }
 
     inner class ClassFqNameToSourceMap(storageFile: File) : BasicStringMap<String>(storageFile, EnumeratorStringDescriptor(), PathStringDescriptor) {
-        operator fun set(compiledClass: JvmClassName, sourceFile: File) {
-            val fqName = compiledClass.fqNameForClassNameWithoutDollars
+        operator fun set(fqName: FqName, sourceFile: File) {
             storage[fqName.asString()] = sourceFile.canonicalPath
         }
 
         operator fun get(fqName: FqName): File? =
                 storage[fqName.asString()]?.let(::File)
-
-        fun remove(compiledClass: JvmClassName) {
-            remove(compiledClass.fqNameForClassNameWithoutDollars)
-        }
 
         fun remove(fqName: FqName) {
             storage.remove(fqName.asString())
@@ -556,7 +551,7 @@ open class IncrementalCacheImpl<Target>(
         removedSupertypes.forEach { subtypesMap.removeValues(it, setOf(child)) }
 
         supertypesMap[child] = parents
-        classFqNameToSourceMap[kotlinClass.className] = srcFile
+        classFqNameToSourceMap[kotlinClass.className.fqNameForClassNameWithoutDollars] = srcFile
     }
 
     private fun removeAllFromClassStorage(removedClasses: Collection<JvmClassName>) {
