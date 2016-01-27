@@ -61,8 +61,8 @@
 
     <distributionManagement>
         <repository>
-            <id>bintray</id>
-            <url>https://api.bintray.com/maven/${kotlin.bintray.deploy.path}</url>
+            <id>${deploy-repo}</id>
+            <url>${deploy-url}</url>
         </repository>
         <snapshotRepository>
             <id>sonatype-nexus-staging</id>
