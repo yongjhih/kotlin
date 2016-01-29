@@ -32,6 +32,7 @@ fun Project.initKapt(
         kaptManager: AnnotationProcessingManager,
         variantName: String,
         kotlinOutputDir: File,
+        kotlinOptions: Any?,
         subpluginEnvironment: SubpluginEnvironment,
         taskFactory: (suffix: String) -> AbstractCompile
 ): AbstractCompile? {
@@ -55,6 +56,11 @@ fun Project.initKapt(
         }
 
         subpluginEnvironment.addSubpluginArguments(this, kotlinAfterJavaTask)
+
+        kotlinAfterJavaTask.extensions.extraProperties.set("defaultModuleName", "${project.name}-${kotlinTask.name}")
+        if (kotlinOptions != null) {
+            kotlinAfterJavaTask.setProperty("kotlinOptions", kotlinOptions)
+        }
     } else {
         kotlinAfterJavaTask = null
         kotlinTask.logger.kotlinDebug("kapt: Class file stubs are not used")
