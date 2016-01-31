@@ -17,6 +17,15 @@
 package org.jetbrains.kotlin.cli.jvm.repl.messages
 
 class ReplConsoleWriter : ReplWriter {
+    init {
+        Runtime.getRuntime().addShutdownHook(object : Thread("Kotlin REPL shutdown hook") {
+            override fun run() {
+                // Print an empty line to make the command prompt start from the beginning of the line after REPL exits
+                println()
+            }
+        })
+    }
+
     override fun printlnWelcomeMessage(x: String) = println(x)
     override fun printlnHelpMessage(x: String) = println(x)
     override fun outputCompileError(x: String) = println(x)
