@@ -31,8 +31,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static org.jetbrains.kotlin.resolve.DescriptorUtils.getFqName;
-
 public class OverloadResolver {
     @NotNull private final BindingTrace trace;
     @NotNull private final OverloadFilter overloadFilter;
@@ -50,49 +48,43 @@ public class OverloadResolver {
     }
 
     private void checkOverloads(@NotNull BodiesResolveContext c) {
-        MultiMap<ClassDescriptor, ConstructorDescriptor> inClasses = MultiMap.create();
-        MultiMap<FqNameUnsafe, ConstructorDescriptor> inPackages = MultiMap.create();
-        fillGroupedConstructors(c, inClasses, inPackages);
+        MultiMap<ClassDescriptor, ConstructorDescriptor> inClasses = findConstructorsInNestedClasses(c);
 
         for (Map.Entry<KtClassOrObject, ClassDescriptorWithResolutionScopes> entry : c.getDeclaredClasses().entrySet()) {
             checkOverloadsInAClass(entry.getValue(), entry.getKey(), inClasses.get(entry.getValue()));
         }
-        checkOverloadsInPackages(c, inPackages);
+        checkOverloadsInPackages(c);
     }
 
-    private static void fillGroupedConstructors(
-            @NotNull BodiesResolveContext c,
-            @NotNull MultiMap<ClassDescriptor, ConstructorDescriptor> inClasses,
-            @NotNull MultiMap<FqNameUnsafe, ConstructorDescriptor> inPackages
-    ) {
+    private static MultiMap<ClassDescriptor, ConstructorDescriptor> findConstructorsInNestedClasses(@NotNull BodiesResolveContext c) {
+        MultiMap<ClassDescriptor, ConstructorDescriptor> inClasses = MultiMap.create();
+
         for (ClassDescriptorWithResolutionScopes klass : c.getDeclaredClasses().values()) {
             if (klass.getKind().isSingleton() || klass.getName().isSpecial()) {
                 // Constructors of singletons or anonymous object aren't callable from the code, so they shouldn't participate in overload name checking
                 continue;
             }
             DeclarationDescriptor containingDeclaration = klass.getContainingDeclaration();
-            if (containingDeclaration instanceof ClassDescriptor) {
+            if (containingDeclaration instanceof ScriptDescriptor) {
+                // TODO: check overload conflicts of functions with constructors in scripts
+            }
+            else if (containingDeclaration instanceof ClassDescriptor) {
                 ClassDescriptor classDescriptor = (ClassDescriptor) containingDeclaration;
                 inClasses.putValues(classDescriptor, klass.getConstructors());
             }
-            else if (containingDeclaration instanceof PackageFragmentDescriptor) {
-                inPackages.putValues(getFqName(klass), klass.getConstructors());
-            }
-            else if (containingDeclaration instanceof ScriptDescriptor) {
-                // TODO: check overload conflicts of functions with constructors in scripts
-            }
-            else if (!(containingDeclaration instanceof FunctionDescriptor || containingDeclaration instanceof PropertyDescriptor)) {
+            else if (!(containingDeclaration instanceof FunctionDescriptor ||
+                       containingDeclaration instanceof PropertyDescriptor ||
+                       containingDeclaration instanceof PackageFragmentDescriptor)) {
                 throw new IllegalStateException("Illegal class container: " + containingDeclaration);
             }
         }
+
+        return inClasses;
     }
 
-    private void checkOverloadsInPackages(
-            @NotNull BodiesResolveContext c,
-            @NotNull MultiMap<FqNameUnsafe, ConstructorDescriptor> inPackages
-    ) {
+    private void checkOverloadsInPackages(@NotNull BodiesResolveContext c) {
         MultiMap<FqNameUnsafe, CallableMemberDescriptor> membersByName =
-                OverloadUtil.groupModulePackageMembersByFqName(c, inPackages, overloadFilter);
+                OverloadUtil.groupModulePackageMembersByFqName(c, overloadFilter);
 
         for (Map.Entry<FqNameUnsafe, Collection<CallableMemberDescriptor>> e : membersByName.entrySet()) {
             FqNameUnsafe fqName = e.getKey().parent();
@@ -142,7 +134,7 @@ public class OverloadResolver {
         for (Collection<? extends CallableMemberDescriptor> redeclarationGroup : OverloadUtil.getPossibleRedeclarationGroups(members)) {
             Set<Pair<KtDeclaration, CallableMemberDescriptor>> redeclarations = findRedeclarations(redeclarationGroup);
             // TODO: don't render FQ name here, extract this logic to somewhere
-            reportRedeclarations(packageFQN.isRoot() ? "root package" : packageFQN.asString(), redeclarations);
+            reportRedeclarations(packageFQN.isRoot() ? "root package" : packageFQN.asString(), redeclarations, true);
         }
     }
 
@@ -153,7 +145,7 @@ public class OverloadResolver {
     ) {
         if (members.size() == 1) return;
 
-        reportRedeclarations(nameForErrorMessage(classDescriptor, ktClass), findRedeclarations(members));
+        reportRedeclarations(nameForErrorMessage(classDescriptor, ktClass), findRedeclarations(members), false);
     }
 
     @NotNull
@@ -204,7 +196,8 @@ public class OverloadResolver {
     }
 
     private void reportRedeclarations(@NotNull String functionContainer,
-            @NotNull Set<Pair<KtDeclaration, CallableMemberDescriptor>> redeclarations) {
+            @NotNull Set<Pair<KtDeclaration, CallableMemberDescriptor>> redeclarations,
+            boolean inPackage) {
         for (Pair<KtDeclaration, CallableMemberDescriptor> redeclaration : redeclarations) {
             CallableMemberDescriptor memberDescriptor = redeclaration.getSecond();
 
@@ -218,7 +211,7 @@ public class OverloadResolver {
 
                 trace.report(Errors.CONFLICTING_OVERLOADS.on(
                         ktDeclaration, memberDescriptor,
-                        containingClassName != null ? containingClassName : functionContainer));
+                        !inPackage && containingClassName != null ? containingClassName : functionContainer));
             }
         }
     }
