@@ -42,6 +42,9 @@ import org.jetbrains.kotlin.util.PerformanceCounter
 import org.jetbrains.kotlin.utils.KotlinPaths
 import org.jetbrains.kotlin.utils.KotlinPathsFromHomeDir
 import org.jetbrains.kotlin.utils.PathUtil
+import sun.jvmstat.monitor.Monitor
+import sun.jvmstat.monitor.MonitoredHost
+import sun.jvmstat.monitor.VmIdentifier
 import java.io.File
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeUnit
@@ -196,11 +199,26 @@ open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
                 KotlinToJVMBytecodeCompiler.compileBunchOfSources(environment, jar, outputDir, friendPaths, arguments.includeRuntime)
             }
 
-            if (arguments.reportPerf) {
-                reportGCTime(environment.configuration)
-                reportCompilationTime(environment.configuration)
-                PerformanceCounter.report { s -> reportPerf(environment.configuration, s) }
+            reportGCTime(environment.configuration)
+            reportCompilationTime(environment.configuration)
+            PerformanceCounter.report { s -> reportPerf(environment.configuration, s) }
+
+            val monitoredHost = MonitoredHost.getMonitoredHost(null as String?)
+            println(monitoredHost.hostIdentifier)
+            monitoredHost.activeVms().forEach {
+                val vm = monitoredHost.getMonitoredVm(VmIdentifier(it.toString()))
+                val javaCommand = vm.findByName("sun.rt.javaCommand").value.toString()
+                if (javaCommand.contains("Hello.kt")) {
+                    vm.findByPattern(".*").forEach { monitor ->
+                        if (monitor is Monitor) {
+                            println("${monitor.name} = ${monitor.value}")
+                        }
+                    }
+
+                }
+
             }
+
             return OK
         }
         catch (e: CompilationException) {
