@@ -99,15 +99,32 @@ object Main {
         runner.run(classpath, arguments)
     }
 
-    @JvmStatic fun main(args: Array<String>) {
+    @JvmStatic
+    fun main(args: Array<String>) {
         try {
             run(args)
         }
         catch (e: RunnerException) {
-            System.err.println("error: " + e.message)
+            System.err.println("error: ${e.message}")
             System.exit(1)
         }
+        catch (e: Throwable) {
+            @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+            for (exception in generateSequence(e, Throwable::cause)) {
+                // The cast is needed because of KT-10887
+                (exception as java.lang.Throwable).stackTrace = sanitizeStackTrace(exception.stackTrace)
+            }
+            throw e
+        }
     }
+
+    private fun sanitizeStackTrace(trace: Array<StackTraceElement>) =
+            trace.dropLastWhile {
+                val name = it.className
+                name.startsWith("org.jetbrains.kotlin.") ||
+                name.startsWith("java.lang.reflect.") ||
+                name.startsWith("sun.reflect.")
+            }.toTypedArray()
 
     private fun printUsageAndExit() {
         println("""kotlin: run Kotlin programs, scripts or REPL.
