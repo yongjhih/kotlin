@@ -49,6 +49,12 @@ public class CompileKotlinAgainstMultifileKotlinTestGenerated extends AbstractCo
             doBoxTest(fileName);
         }
 
+        @TestMetadata("constFromOtherPackage.1.kt")
+        public void testConstFromOtherPackage() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/boxMultifileClasses/calls/constFromOtherPackage.1.kt");
+            doBoxTest(fileName);
+        }
+
         @TestMetadata("valFromOtherPackage.1.kt")
         public void testValFromOtherPackage() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/codegen/boxMultifileClasses/calls/valFromOtherPackage.1.kt");
