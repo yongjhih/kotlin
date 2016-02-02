@@ -1,0 +1,4 @@
+>>> (listOf(1) as List<String>).unresolved()
+error: unresolved reference: unresolved
+(listOf(1) as List<String>).unresolved()
+                            ^
