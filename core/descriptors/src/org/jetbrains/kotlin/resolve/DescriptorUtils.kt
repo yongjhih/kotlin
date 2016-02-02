@@ -106,6 +106,13 @@ val DeclarationDescriptorWithVisibility.isEffectivelyPublicApi: Boolean
         return true
     }
 
+val DeclarationDescriptor.isInsidePrivateClass: Boolean
+    get() {
+        var parent = DescriptorUtils.getParentOfType(this, ClassDescriptor::class.java, false)
+        return parent != null && Visibilities.isPrivate(parent.visibility)
+    }
+
+
 fun ClassDescriptor.getSuperClassNotAny(): ClassDescriptor? {
     for (supertype in defaultType.constructor.supertypes) {
         if (!KotlinBuiltIns.isAnyOrNullableAny(supertype)) {
