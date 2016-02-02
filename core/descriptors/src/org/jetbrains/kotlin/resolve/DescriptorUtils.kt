@@ -108,7 +108,7 @@ val DeclarationDescriptorWithVisibility.isEffectivelyPublicApi: Boolean
 
 val DeclarationDescriptor.isInsidePrivateClass: Boolean
     get() {
-        var parent = DescriptorUtils.getParentOfType(this, ClassDescriptor::class.java, false)
+        var parent = containingDeclaration as? ClassDescriptor
         return parent != null && Visibilities.isPrivate(parent.visibility)
     }
 
