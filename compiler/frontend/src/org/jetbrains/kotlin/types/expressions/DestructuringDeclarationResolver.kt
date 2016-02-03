@@ -43,13 +43,13 @@ class DestructuringDeclarationResolver(
             writableScope: LexicalWritableScope,
             destructuringDeclaration: KtDestructuringDeclaration,
             receiver: ReceiverValue?,
-            reportErrorsOn: KtExpression,
+            initializer: KtExpression?,
             context: ExpressionTypingContext
     ) {
         for ((componentIndex, entry) in destructuringDeclaration.entries.withIndex()) {
             val componentName = createComponentName(componentIndex + 1)
 
-            val componentType = resolveComponentFunctionAndGetType(componentName, context, entry, receiver, reportErrorsOn)
+            val componentType = resolveComponentFunctionAndGetType(componentName, context, entry, receiver, initializer)
             val variableDescriptor = localVariableResolver.resolveLocalVariableDescriptorWithType(writableScope, entry, componentType, context.trace)
 
             ExpressionTypingUtils.checkVariableShadowing(writableScope, context.trace, variableDescriptor)
@@ -63,16 +63,16 @@ class DestructuringDeclarationResolver(
             context: ExpressionTypingContext,
             entry: KtDestructuringDeclarationEntry,
             receiver: ReceiverValue?,
-            reportErrorsOn: KtExpression
+            initializer: KtExpression?
     ): KotlinType {
         fun errorType() = ErrorUtils.createErrorType("$componentName() return type")
 
-        if (receiver == null) return errorType()
+        if (receiver == null || initializer == null) return errorType()
 
         val expectedType = getExpectedTypeForComponent(context, entry)
         val results = fakeCallResolver.resolveFakeCall(
                 context.replaceExpectedType(expectedType), receiver, componentName,
-                entry, reportErrorsOn, FakeCallKind.COMPONENT
+                entry, initializer, FakeCallKind.COMPONENT
         )
 
         if (!results.isSuccess) {
@@ -87,7 +87,7 @@ class DestructuringDeclarationResolver(
         val functionReturnType = functionDescriptor.returnType
         if (functionReturnType != null && !TypeUtils.noExpectedType(expectedType)
             && !KotlinTypeChecker.DEFAULT.isSubtypeOf(functionReturnType, expectedType) ) {
-            context.trace.report(Errors.COMPONENT_FUNCTION_RETURN_TYPE_MISMATCH.on(reportErrorsOn, componentName, functionReturnType, expectedType))
+            context.trace.report(Errors.COMPONENT_FUNCTION_RETURN_TYPE_MISMATCH.on(initializer, componentName, functionReturnType, expectedType))
         }
         return functionReturnType ?: errorType()
     }

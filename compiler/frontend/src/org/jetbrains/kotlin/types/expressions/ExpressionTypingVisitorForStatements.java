@@ -117,10 +117,11 @@ public class ExpressionTypingVisitorForStatements extends ExpressionTypingVisito
         KtExpression initializer = multiDeclaration.getInitializer();
         if (initializer == null) {
             context.trace.report(INITIALIZER_REQUIRED_FOR_DESTRUCTURING_DECLARATION.on(multiDeclaration));
-            return TypeInfoFactoryKt.noTypeInfo(context);
         }
-        ExpressionReceiver expressionReceiver = ExpressionTypingUtils.getExpressionReceiver(
-                facade, initializer, context.replaceExpectedType(NO_EXPECTED_TYPE).replaceContextDependency(INDEPENDENT));
+
+        ExpressionReceiver expressionReceiver = initializer != null ? ExpressionTypingUtils.getExpressionReceiver(
+                facade, initializer, context.replaceExpectedType(NO_EXPECTED_TYPE).replaceContextDependency(INDEPENDENT)) : null;
+
         components.destructuringDeclarationResolver
                 .defineLocalVariablesFromMultiDeclaration(scope, multiDeclaration, expressionReceiver, initializer, context);
         components.modifiersChecker.withTrace(context.trace).checkModifiersForDestructuringDeclaration(multiDeclaration);
