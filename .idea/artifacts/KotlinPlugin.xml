@@ -58,6 +58,10 @@
         <element id="archive" name="kotlin-android-extensions-compiler-plugin.jar">
           <element id="module-output" name="android-compiler-plugin" />
         </element>
+        <element id="archive" name="android-lint.jar">
+          <element id="module-output" name="uast-kotlin" />
+          <element id="module-output" name="android-lint" />
+        </element>
       </element>
       <element id="directory" name="kotlinc">
         <element id="dir-copy" path="$PROJECT_DIR$/dist/kotlinc" />

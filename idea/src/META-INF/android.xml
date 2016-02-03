@@ -18,4 +18,8 @@
         <simpleNameReferenceExtension implementation="org.jetbrains.kotlin.android.synthetic.idea.AndroidSimpleNameReferenceExtension"/>
         <kotlinIndicesHelperExtension implementation="org.jetbrains.kotlin.android.synthetic.idea.AndroidIndicesHelperExtension"/>
     </extensions>
+
+    <extensions defaultExtensionNs="com.android.tools.lint.client.api">
+        <lintLanguageExtension implementation="org.jetbrains.kotlin.lint.KotlinLintLanguageExtension"/>
+    </extensions>
 </idea-plugin>
