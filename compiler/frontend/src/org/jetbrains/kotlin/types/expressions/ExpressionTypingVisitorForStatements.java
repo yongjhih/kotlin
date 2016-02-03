@@ -121,7 +121,6 @@ public class ExpressionTypingVisitorForStatements extends ExpressionTypingVisito
         }
         ExpressionReceiver expressionReceiver = ExpressionTypingUtils.getExpressionReceiver(
                 facade, initializer, context.replaceExpectedType(NO_EXPECTED_TYPE).replaceContextDependency(INDEPENDENT));
-        KotlinTypeInfo typeInfo = facade.getTypeInfo(initializer, context);
         components.destructuringDeclarationResolver
                 .defineLocalVariablesFromMultiDeclaration(scope, multiDeclaration, expressionReceiver, initializer, context);
         components.modifiersChecker.withTrace(context.trace).checkModifiersForDestructuringDeclaration(multiDeclaration);
@@ -131,7 +130,8 @@ public class ExpressionTypingVisitorForStatements extends ExpressionTypingVisito
             return TypeInfoFactoryKt.noTypeInfo(context);
         }
         else {
-            return typeInfo.replaceType(components.dataFlowAnalyzer.checkStatementType(multiDeclaration, context));
+            return facade.getTypeInfo(initializer, context)
+                    .replaceType(components.dataFlowAnalyzer.checkStatementType(multiDeclaration, context));
         }
     }
 
