@@ -42,7 +42,7 @@ class DestructuringDeclarationResolver(
     fun defineLocalVariablesFromMultiDeclaration(
             writableScope: LexicalWritableScope,
             destructuringDeclaration: KtDestructuringDeclaration,
-            receiver: ReceiverValue,
+            receiver: ReceiverValue?,
             reportErrorsOn: KtExpression,
             context: ExpressionTypingContext
     ) {
@@ -62,10 +62,12 @@ class DestructuringDeclarationResolver(
             componentName: Name,
             context: ExpressionTypingContext,
             entry: KtDestructuringDeclarationEntry,
-            receiver: ReceiverValue,
+            receiver: ReceiverValue?,
             reportErrorsOn: KtExpression
     ): KotlinType {
         fun errorType() = ErrorUtils.createErrorType("$componentName() return type")
+
+        if (receiver == null) return errorType()
 
         val expectedType = getExpectedTypeForComponent(context, entry)
         val results = fakeCallResolver.resolveFakeCall(
