@@ -18,7 +18,6 @@ package org.jetbrains.kotlin.cli.jvm.compiler;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -57,8 +56,6 @@ import static org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation.N
 import static org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR;
 
 public class CompileEnvironmentUtil {
-    private static Logger LOG = Logger.getInstance(CompileEnvironmentUtil.class);
-
     @NotNull
     public static ModuleScriptData loadModuleDescriptions(String moduleDefinitionFile, MessageCollector messageCollector) {
         File file = new File(moduleDefinitionFile);
@@ -165,9 +162,13 @@ public class CompileEnvironmentUtil {
                 String moduleFilePath = configuration.get(JVMConfigurationKeys.MODULE_XML_FILE_PATH);
                 if (moduleFilePath != null) {
                     String moduleFileContent = FileUtil.loadFile(new File(moduleFilePath));
-                    LOG.warn(message +
-                              "\n\nmodule file path: " + moduleFilePath +
-                              "\ncontent:\n" + moduleFileContent);
+
+                    // Used System.err instead of Logger because of
+                    // on TC we get other implementations than when run through JPS or command line
+                    //noinspection UseOfSystemOutOrSystemErr
+                    System.err.println("WARN: " + message +
+                                       "\n\nmodule file path: " + moduleFilePath +
+                                       "\ncontent:\n" + moduleFileContent);
                 }
 
                 reportError.invoke(message);
