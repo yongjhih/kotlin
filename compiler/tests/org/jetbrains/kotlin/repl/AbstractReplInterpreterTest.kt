@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.repl
 
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.testFramework.UsefulTestCase
+import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.repl.ReplInterpreter
 import org.jetbrains.kotlin.test.ConfigurationKind
 import org.jetbrains.kotlin.test.KotlinTestUtils
@@ -81,7 +82,7 @@ abstract class AbstractReplInterpreterTest : UsefulTestCase() {
 
     protected fun doTest(path: String) {
         val configuration = KotlinTestUtils.compilerConfigurationForTests(ConfigurationKind.ALL, TestJdkKind.MOCK_JDK)
-        val repl = ReplInterpreter(testRootDisposable!!, configuration, false, null)
+        val repl = ReplInterpreter(testRootDisposable!!, configuration.jvmClasspathRoots, ideMode = false, replReader = null, noJdk = true)
 
         for ((code, expected) in loadLines(File(path))) {
             val lineResult = repl.eval(code)

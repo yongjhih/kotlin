@@ -24,14 +24,15 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.psi.impl.PsiFileFactoryImpl
 import com.intellij.psi.search.ProjectScope
 import com.intellij.testFramework.LightVirtualFile
-import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
-import org.jetbrains.kotlin.cli.common.messages.DiagnosticMessageReporter
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.messages.*
 import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.cli.jvm.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.config.getModuleName
-import org.jetbrains.kotlin.cli.jvm.config.jvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.repl.di.ReplLastLineScopeProvider
 import org.jetbrains.kotlin.cli.jvm.repl.di.createContainerForReplWithJava
 import org.jetbrains.kotlin.cli.jvm.repl.messages.DiagnosticMessageHolder
@@ -48,6 +49,7 @@ import org.jetbrains.kotlin.descriptors.ScriptDescriptor
 import org.jetbrains.kotlin.descriptors.impl.CompositePackageFragmentProvider
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.parsing.KotlinParserDefinition
@@ -65,14 +67,17 @@ import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.ScriptParameter
 import org.jetbrains.kotlin.script.ScriptPriorities
 import org.jetbrains.kotlin.script.StandardScriptDefinition
+import org.jetbrains.kotlin.utils.PathUtil
+import java.io.File
 import java.io.PrintWriter
 import java.net.URLClassLoader
 
 class ReplInterpreter(
         disposable: Disposable,
-        configuration: CompilerConfiguration,
+        classpath: List<File>,
         private val ideMode: Boolean,
-        private val replReader: ReplSystemInWrapper?
+        private val replReader: ReplSystemInWrapper?,
+        private val noJdk: Boolean
 ) {
     private var lineNumber = 0
 
@@ -91,6 +96,20 @@ class ReplInterpreter(
     private val scriptDeclarationFactory: ScriptMutableDeclarationProviderFactory
 
     init {
+        val configuration = CompilerConfiguration()
+
+        configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, GroupingMessageCollector(PrintingMessageCollector(
+                System.err, MessageRenderer.PLAIN_RELATIVE_PATHS, /* verbose = */ false
+        )))
+
+        if (!noJdk) {
+            configuration.addJvmClasspathRoots(PathUtil.getJdkClassesRoots())
+        }
+
+        configuration.addJvmClasspathRoots(classpath)
+
+        configuration.put(JVMConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
+
         configuration.add(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, REPL_LINE_AS_SCRIPT_DEFINITION)
 
         val environment = KotlinCoreEnvironment.createForProduction(disposable, configuration, EnvironmentConfigFiles.JVM_CONFIG_FILES)
@@ -128,9 +147,7 @@ class ReplInterpreter(
                 )
         ))
 
-        val classpath = configuration.jvmClasspathRoots.map { it.toURI().toURL() }
-
-        this.classLoader = ReplClassLoader(URLClassLoader(classpath.toTypedArray(), null))
+        this.classLoader = ReplClassLoader(URLClassLoader(classpath.map { it.toURI().toURL() }.toTypedArray(), null))
     }
 
     enum class LineResultType {

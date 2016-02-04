@@ -49,6 +49,12 @@ import java.util.concurrent.TimeUnit
 open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
 
     override fun doExecute(arguments: K2JVMCompilerArguments, services: Services, messageCollector: MessageCollector, rootDisposable: Disposable): ExitCode {
+        if (arguments.module == null && !arguments.script && arguments.freeArgs.isEmpty() && !arguments.version) {
+            val classpath = getClasspath(PathUtil.getKotlinPathsForCompiler(), arguments)
+            ReplFromTerminal.run(classpath)
+            return ExitCode.OK
+        }
+
         val messageSeverityCollector = MessageSeverityCollector(messageCollector)
         val paths = if (arguments.kotlinHome != null)
             KotlinPathsFromHomeDir(File(arguments.kotlinHome))
@@ -103,7 +109,7 @@ open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
                 messageSeverityCollector.report(CompilerMessageSeverity.ERROR, "Specify script source path to evaluate", CompilerMessageLocation.NO_LOCATION)
                 return COMPILATION_ERROR
             }
-            configuration.addKotlinSourceRoot(arguments.freeArgs.get(0))
+            configuration.addKotlinSourceRoot(arguments.freeArgs.first())
         }
         else if (arguments.module == null) {
             for (arg in arguments.freeArgs) {
@@ -118,11 +124,6 @@ open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
         configuration.addJvmClasspathRoots(getClasspath(paths, arguments))
 
         configuration.put(JVMConfigurationKeys.MODULE_NAME, arguments.moduleName ?: JvmAbi.DEFAULT_MODULE_NAME)
-
-        if (arguments.module == null && arguments.freeArgs.isEmpty() && !arguments.version) {
-            ReplFromTerminal.run(rootDisposable, configuration)
-            return ExitCode.OK
-        }
 
         configuration.add(CommonConfigurationKeys.SCRIPT_DEFINITIONS_KEY, StandardScriptDefinition)
 

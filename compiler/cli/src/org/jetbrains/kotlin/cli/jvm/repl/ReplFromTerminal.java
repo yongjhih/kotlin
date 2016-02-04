@@ -16,7 +16,7 @@
 
 package org.jetbrains.kotlin.cli.jvm.repl;
 
-import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.cli.common.KotlinVersion;
@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.cli.jvm.repl.messages.*;
 import org.jetbrains.kotlin.cli.jvm.repl.reader.ConsoleReplCommandReader;
 import org.jetbrains.kotlin.cli.jvm.repl.reader.IdeReplCommandReader;
 import org.jetbrains.kotlin.cli.jvm.repl.reader.ReplCommandReader;
-import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.utils.ExceptionUtilsKt;
 
 import java.io.File;
@@ -39,16 +38,12 @@ public class ReplFromTerminal {
     private final Object waitRepl = new Object();
 
     private final boolean ideMode;
-    private ReplSystemInWrapper replReader;
     private final ReplWriter replWriter;
     private final ReplErrorLogger replErrorLogger;
 
     private ReplCommandReader commandReader;
 
-    public ReplFromTerminal(
-            @NotNull final Disposable disposable,
-            @NotNull final CompilerConfiguration compilerConfiguration
-    ) {
+    public ReplFromTerminal(@NotNull final List<File> classpath) {
         String replIdeMode = System.getProperty("kotlin.repl.ideMode");
         ideMode = replIdeMode != null && replIdeMode.equals("true");
 
@@ -66,9 +61,13 @@ public class ReplFromTerminal {
 
         // wrapper for `in` is required to give user possibility of calling
         // [readLine] from ide-console repl
+        final ReplSystemInWrapper replReader;
         if (ideMode) {
             replReader = new ReplSystemInWrapper(System.in, replWriter);
             System.setIn(replReader);
+        }
+        else {
+            replReader = null;
         }
 
         replErrorLogger = new ReplErrorLogger(ideMode, replWriter);
@@ -77,7 +76,7 @@ public class ReplFromTerminal {
             @Override
             public void run() {
                 try {
-                    replInterpreter = new ReplInterpreter(disposable, compilerConfiguration, ideMode, replReader);
+                    replInterpreter = new ReplInterpreter(Disposer.newDisposable(), classpath, ideMode, replReader, /* noJdk = */ false);
                 }
                 catch (Throwable e) {
                     replInitializationFailed = e;
@@ -243,8 +242,7 @@ public class ReplFromTerminal {
         return Arrays.asList(command.split(" "));
     }
 
-    public static void run(@NotNull Disposable disposable, @NotNull CompilerConfiguration configuration) {
-        new ReplFromTerminal(disposable, configuration).doRun();
+    public static void run(@NotNull List<File> classpath) {
+        new ReplFromTerminal(classpath).doRun();
     }
-
 }
