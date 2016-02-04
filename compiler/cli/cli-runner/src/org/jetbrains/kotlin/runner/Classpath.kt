@@ -20,15 +20,17 @@ import java.io.File
 import java.net.URL
 
 class Classpath {
-    private val classpath = arrayListOf<URL>()
+    private val classpath = arrayListOf<File>()
 
     fun add(paths: String) {
         for (path in paths.split(File.pathSeparator)) {
-            classpath.add(File(path).absoluteFile.toURI().toURL())
+            classpath.add(File(path).absoluteFile)
         }
     }
 
-    fun getURLs(): Array<URL> {
-        return classpath.toTypedArray()
-    }
+    val files: List<File>
+        get() = classpath
+
+    val urls: Array<URL>
+        get() = classpath.map { it.toURI().toURL() }.toTypedArray()
 }

@@ -93,7 +93,7 @@ object Main {
         classpath.add(KOTLIN_HOME.toString() + "/lib/kotlin-reflect.jar")
 
         if (runner == null) {
-            runner = ReplRunner()
+            runner = ReplRunner(KOTLIN_HOME)
         }
 
         runner.run(classpath, arguments)

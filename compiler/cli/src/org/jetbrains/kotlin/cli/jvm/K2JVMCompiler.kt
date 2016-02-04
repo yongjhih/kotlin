@@ -50,6 +50,11 @@ open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
 
     override fun doExecute(arguments: K2JVMCompilerArguments, services: Services, messageCollector: MessageCollector, rootDisposable: Disposable): ExitCode {
         if (arguments.module == null && !arguments.script && arguments.freeArgs.isEmpty() && !arguments.version) {
+            PrintingMessageCollector.PLAIN_TEXT_TO_SYSTEM_ERR.report(
+                    CompilerMessageSeverity.WARNING,
+                    "Running the REPL with 'kotlinc' will not be supported soon. Please use the 'kotlin' command instead",
+                    CompilerMessageLocation.NO_LOCATION
+            )
             val classpath = getClasspath(PathUtil.getKotlinPathsForCompiler(), arguments)
             ReplFromTerminal.run(classpath)
             return ExitCode.OK

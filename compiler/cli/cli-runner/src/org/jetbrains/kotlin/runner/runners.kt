@@ -70,7 +70,7 @@ abstract class AbstractRunner : Runner {
 
 class MainClassRunner(override val className: String) : AbstractRunner() {
     override fun createClassLoader(classpath: Classpath): ClassLoader =
-            URLClassLoader(classpath.getURLs(), null)
+            URLClassLoader(classpath.urls, null)
 }
 
 class JarRunner(private val path: String) : AbstractRunner() {
@@ -97,10 +97,18 @@ class JarRunner(private val path: String) : AbstractRunner() {
     }
 }
 
-class ReplRunner : Runner {
+class ReplRunner(private val home: File) : Runner {
     override fun run(classpath: Classpath, arguments: List<String>) {
-        // TODO: run REPL instead
-        throw RunnerException("please specify at least one name or file to run")
+        require(arguments.isEmpty()) { "REPL runner cannot be instantiated with arguments" }
+
+        val preloaderJar = File(home, "lib/kotlin-preloader.jar")
+        val preloader = URLClassLoader(arrayOf(preloaderJar.toURI().toURL()), null).loadClass("org.jetbrains.kotlin.preloading.Preloader")
+        val main = preloader.getDeclaredMethod("main", Array<String>::class.java)
+        val args = listOf(
+                "-cp", File(home, "lib/kotlin-compiler.jar").path,
+                "org.jetbrains.kotlin.cli.jvm.repl.ReplFromTerminal"
+        ) + classpath.files.map(File::getPath)
+        main(null, args.toTypedArray())
     }
 }
 

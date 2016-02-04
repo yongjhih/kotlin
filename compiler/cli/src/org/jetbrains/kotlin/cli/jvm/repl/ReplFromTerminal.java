@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.utils.ExceptionUtilsKt;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -244,5 +245,13 @@ public class ReplFromTerminal {
 
     public static void run(@NotNull List<File> classpath) {
         new ReplFromTerminal(classpath).doRun();
+    }
+
+    public static void main(String[] args) {
+        List<File> files = new ArrayList<File>(args.length);
+        for (String arg : args) {
+            files.add(new File(arg));
+        }
+        run(files);
     }
 }
