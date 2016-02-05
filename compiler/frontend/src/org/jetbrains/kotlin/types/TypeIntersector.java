@@ -52,7 +52,8 @@ public class TypeIntersector {
         // Intersection of T1..Tn is an intersection of their non-null versions,
         //   made nullable is they all were nullable
         KotlinType nothingOrNullableNothing = null;
-        boolean allNullable = true;
+        boolean nullableExists = false;
+        boolean notNullExists = false;
         List<KotlinType> nullabilityStripped = new ArrayList<KotlinType>(types.size());
         for (KotlinType type : types) {
             if (type.isError()) continue;
@@ -60,12 +61,16 @@ public class TypeIntersector {
             if (KotlinBuiltIns.isNothingOrNullableNothing(type)) {
                 nothingOrNullableNothing = type;
             }
-            allNullable &= type.isMarkedNullable();
+            nullableExists |= type.isMarkedNullable();        // True for Type? but not Type!
+            notNullExists |= !TypeUtils.isNullableType(type); // True for Type but not Type!
             nullabilityStripped.add(TypeUtils.makeNotNullable(type));
         }
 
+        // Type & Type? = Type, Type & Type! = Type, Type! & Type? = Type?
+        // NB: ideally we should have Type & Type! = Type, Type? & Type! = Type!, or in general case Type & (LB, UB) = (Type & LB, Type & UB)
+        boolean makeNullable = nullableExists && !notNullExists;
         if (nothingOrNullableNothing != null) {
-            return TypeUtils.makeNullableAsSpecified(nothingOrNullableNothing, allNullable);
+            return TypeUtils.makeNullableAsSpecified(nothingOrNullableNothing, makeNullable);
         }
 
         if (nullabilityStripped.isEmpty()) {
@@ -93,7 +98,7 @@ public class TypeIntersector {
                         break;
                     }
                 }
-                if (relativeToAll) return TypeUtils.makeNullableAsSpecified(type, allNullable);
+                if (relativeToAll) return TypeUtils.makeNullableAsSpecified(type, makeNullable);
             }
             for (KotlinType other : nullabilityStripped) {
                 if (!type.equals(other) && typeChecker.isSubtypeOf(other, type)) {
@@ -120,11 +125,11 @@ public class TypeIntersector {
             if (bestRepresentative == null) {
                 throw new AssertionError("Empty intersection for types " + types);
             }
-            return TypeUtils.makeNullableAsSpecified(bestRepresentative, allNullable);
+            return TypeUtils.makeNullableAsSpecified(bestRepresentative, makeNullable);
         }
 
         if (resultingTypes.size() == 1) {
-            return TypeUtils.makeNullableAsSpecified(resultingTypes.get(0), allNullable);
+            return TypeUtils.makeNullableAsSpecified(resultingTypes.get(0), makeNullable);
         }
 
         TypeConstructor constructor = new IntersectionTypeConstructor(Annotations.Companion.getEMPTY(), resultingTypes);
@@ -132,7 +137,7 @@ public class TypeIntersector {
         return KotlinTypeImpl.create(
                 Annotations.Companion.getEMPTY(),
                 constructor,
-                allNullable,
+                makeNullable,
                 Collections.<TypeProjection>emptyList(),
                 TypeIntersectionScope.create("member scope for intersection type " + constructor, resultingTypes)
         );
