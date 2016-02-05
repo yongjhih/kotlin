@@ -6,9 +6,9 @@ open class A(val x: Int, val y: Int) {
     }
 }
 
-fun box(): Boolean {
+fun box(): String {
     val a = A(2, 3)
     val b = a.B(4)
-    return b.foo() == 9
+    return if (b.foo() == 9) "OK" else "failure"
 }
 
