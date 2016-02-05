@@ -7,6 +7,8 @@
         <psi.treeChangePreprocessor implementation="org.jetbrains.kotlin.android.synthetic.idea.AndroidPsiTreeChangePreprocessor"/>
         <errorHandler implementation="org.jetbrains.kotlin.plugin.android.AndroidExtensionsReportSubmitter"/>
         <gotoDeclarationHandler implementation="org.jetbrains.kotlin.android.synthetic.idea.AndroidGotoDeclarationHandler"/>
+
+        <externalAnnotator language="kotlin" implementationClass="org.jetbrains.android.inspections.lint.AndroidLintExternalAnnotator"/>
     </extensions>
 
     <extensions defaultExtensionNs="org.jetbrains.kotlin">

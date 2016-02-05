@@ -50,7 +50,9 @@ import org.jetbrains.kotlin.psi.KtClassOrObject;
 import org.jetbrains.kotlin.psi.KtFile;
 import org.jetbrains.kotlin.psi.KtScript;
 import org.jetbrains.kotlin.resolve.BindingContext;
+import org.jetbrains.kotlin.uast.KotlinConverter;
 import org.jetbrains.kotlin.utils.StringsKt;
+import org.jetbrains.uast.UElement;
 
 import javax.swing.*;
 import java.awt.*;
@@ -105,7 +107,14 @@ public class KotlinBytecodeToolWindow extends JPanel implements Disposable {
             KtFile jetFile = location.getKFile();
             assert jetFile != null;
 
-            return getBytecodeForFile(jetFile, enableInline.isSelected(), enableAssertions.isSelected(), enableOptimization.isSelected());
+            UElement uelement = KotlinConverter.INSTANCE.convertWithParent(jetFile);
+            if (uelement == null) {
+                return "null";
+            } else {
+                return uelement.logString();
+            }
+
+            //return getBytecodeForFile(jetFile, enableInline.isSelected(), enableAssertions.isSelected(), enableOptimization.isSelected());
         }
 
         @Override

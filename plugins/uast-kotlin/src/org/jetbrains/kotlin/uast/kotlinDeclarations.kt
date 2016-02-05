@@ -17,11 +17,14 @@
 package org.jetbrains.kotlin.uast
 
 import com.intellij.psi.*
+import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.codeInsight.DescriptorToSourceUtilsIde
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.visibilityModifierType
+import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.uast.*
-import org.jetbrains.uast.java.lz
 import org.jetbrains.uast.psi.PsiElementBacked
 
 private val MODIFIER_MAP = mapOf(
@@ -56,20 +59,12 @@ class KotlinUImportStatement(
     override val nameToImport = psi.importedFqName?.asString()
 }
 
-class KotlinUFakeIdentifier(
-        override val parent: UElement,
-        override val psi: PsiElement
-) : UIdentifier, PsiElementBacked {
-    override val name = psi.text
-    override fun resolve(context: UastContext) = null
-}
-
 class KotlinUClass(
         override val parent: UElement,
         override val psi: KtClassOrObject
 ) : UClass, PsiElementBacked {
     override val name = psi.name + " (${psi.getSuperTypeListEntries().map { it.typeAsUserType?.referencedName }})"
-    override val nameElement by lz { KotlinConverter.convert(psi.nameIdentifier, this) }
+    override val nameElement by lz { KotlinConverter.asSimpleReference(psi.nameIdentifier, this) }
 
     override val fqName = psi.fqName?.asString()
     override val isEnum = (psi as? KtClass)?.isEnum() ?: false
@@ -80,7 +75,7 @@ class KotlinUClass(
 
     override val declarations by lz { psi.declarations.map { KotlinConverter.convert(it, this) }.filterNotNull() }
 
-    override val superTypes by lz { psi.getSuperTypeListEntries().map { KotlinUType(it.typeReference?.typeElement) } }
+    override val superTypes by lz { psi.getSuperTypeListEntries().map { KotlinUType(it.typeReference) } }
 
     override val visibility = psi.getVisibility()
 
@@ -96,12 +91,13 @@ class KotlinConstructorUFunction(
         override val parent: UElement,
         override val psi: KtConstructor<*>
 ) : UFunction, PsiElementBacked {
+    override val name = psi.getName() ?: "<error name>"
+    override val nameElement by lz { psi.getConstructorKeyword()?.let { KotlinConverter.convert(it, this) } }
+
     override val valueParameterCount = psi.getValueParameters().size
     override val valueParameters by lz { psi.getValueParameters().map { KotlinUValueParameter(this, it) } }
     override val isConstructor = true
-    override val body by lz { KotlinConverter.convertOrEmpty(this, psi.getBodyExpression()) }
-    override val nameElement by lz { psi.getConstructorKeyword()?.let { KotlinUFakeIdentifier(this, it) } }
-    override val name = psi.getName()
+    override val body by lz { KotlinConverter.convertOrEmpty(psi.getBodyExpression(), this) }
     override val visibility = psi.getVisibility()
 }
 
@@ -109,12 +105,14 @@ class KotlinUFunction(
         override val parent: UElement,
         override val psi: KtFunction
 ) : UFunction, PsiElementBacked {
+    override val name = psi.name ?: "<error name>"
+    override val nameElement by lz { psi.nameIdentifier?.let { KotlinConverter.convert(it, this) } }
+
     override val isConstructor = false
     override val valueParameters by lz { psi.valueParameters.map { KotlinUValueParameter(this, it) } }
     override val valueParameterCount = psi.valueParameters.size
-    override val body by lz { KotlinConverter.convertOrEmpty(this, psi.bodyExpression) }
-    override val nameElement by lz { psi.nameIdentifier?.let { KotlinUFakeIdentifier(this, it) } }
-    override val name = psi.name
+    override val body by lz { KotlinConverter.convertOrEmpty(psi.bodyExpression, this) }
+
     override val visibility = psi.getVisibility()
 }
 
@@ -122,22 +120,32 @@ class KotlinUVariable(
         override val parent: UElement,
         override val psi: KtProperty
 ) : UVariable, PsiElementBacked {
-    override val name = psi.name
-    override val nameElement by lz { psi.nameIdentifier?.let { KotlinUFakeIdentifier(this, it) } }
+    override val name = psi.name ?: "<error name>"
+    override val nameElement by lz { KotlinConverter.asSimpleReference(psi.nameIdentifier, this) }
 
     override val isProperty = psi is PsiField
-    override val initializer by lz { KotlinConverter.convertOrEmpty(this, psi.initializer) }
+    override val initializer by lz { KotlinConverter.convertOrEmpty(psi.initializer, this) }
     override val modifiers = emptyList<UastModifier>()
 }
 
-class KotlinUType(val psi: KtTypeElement?) : UClassType {
-    constructor(ref: KtTypeReference?) : this(ref?.typeElement)
+class KotlinUType(val psi: KtTypeReference?) : UClassType {
+    override val name = run {
+        val element = psi?.typeElement
+        if (element is KtUserType) {
+            element.referencedName
+        } else {
+            element?.text
+        }
+    } ?: "<error name>"
 
-    override val name = psi?.name ?: "<no type>"
-    override val isInt = name == "int"
+    override val isInt = name == "Int"
 
     override fun resolve(context: UastContext): UClass? {
-        return null
+        val psi = psi ?: return null
+        val bindingContext = psi.analyze(BodyResolveMode.PARTIAL)
+        val descriptor = bindingContext[BindingContext.TYPE, psi]?.constructor?.declarationDescriptor ?: return null
+        val sourceElement = DescriptorToSourceUtilsIde.getAnyDeclaration(psi.project, descriptor) ?: return null
+        return context.convert(sourceElement) as? UClass
     }
 }
 
@@ -145,7 +153,7 @@ class KotlinUValueParameter(
         override val parent: UElement,
         override val psi: KtParameter
 ) : UValueParameter, PsiElementBacked {
-    override val name = psi.name
-    override val nameElement by lz { psi.nameIdentifier?.let { KotlinUFakeIdentifier(this, it) } }
-    override val type = KotlinUType(psi.typeReference?.typeElement)
+    override val name = psi.name ?: "<error name>"
+    override val nameElement by lz { KotlinConverter.asSimpleReference(psi.nameIdentifier, this) }
+    override val type = KotlinUType(psi.typeReference)
 }

@@ -20,6 +20,5 @@ import com.android.tools.lint.client.api.LintLanguageExtension
 import org.jetbrains.kotlin.uast.KotlinConverter
 
 class KotlinLintLanguageExtension : LintLanguageExtension() {
-    override fun isFileSupported(path: String) = path.endsWith(".kt", false) || path.endsWith(".kts", false)
     override fun getConverter() = KotlinConverter
 }

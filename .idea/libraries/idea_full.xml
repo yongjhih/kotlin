@@ -339,6 +339,7 @@
       <root url="jar://$PROJECT_DIR$/ideaSDK/sources/sources.jar!/xml/xml-psi-impl/gen" />
       <root url="jar://$PROJECT_DIR$/ideaSDK/sources/sources.jar!/xml/xml-structure-view-api/src" />
       <root url="jar://$PROJECT_DIR$/ideaSDK/sources/sources.jar!/xml/xml-structure-view-impl/src" />
+      <root url="file://$PROJECT_DIR$/../intellij-community/java/uast/uast-common/src" />
     </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/ideaSDK/lib" recursive="false" />
   </library>
