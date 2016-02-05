@@ -66,6 +66,12 @@ class CandidateCallWithArgumentMapping<D : CallableDescriptor, K> private constr
                 call: MutableResolvedCall<D>,
                 resolvedArgumentToKeys: (ResolvedValueArgument) -> Collection<K>
         ): CandidateCallWithArgumentMapping<D, K> {
+            // TODO fix 'original' for value parameters of fake overrides
+            // [substituted fake override].original = [unsubstituted fake override]
+            // [value parameter of fake override].original = [value parameter of most specific overridden]
+
+            val unsubstitutedValueParameters = call.candidateDescriptor.original.valueParameters
+
             val argumentsToParameters = hashMapOf<K, ValueParameterDescriptor>()
             var parametersWithDefaultValuesCount = 0
 
@@ -76,7 +82,7 @@ class CandidateCallWithArgumentMapping<D : CallableDescriptor, K> private constr
                 else {
                     val keys = resolvedArgumentToKeys(resolvedValueArgument)
                     for (argumentKey in keys) {
-                        argumentsToParameters[argumentKey] = valueParameterDescriptor.original
+                        argumentsToParameters[argumentKey] = unsubstitutedValueParameters[valueParameterDescriptor.index]
                     }
                 }
             }
