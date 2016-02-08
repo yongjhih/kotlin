@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.name.FqName;
 import org.jetbrains.kotlin.psi.KtExpression;
 import org.jetbrains.kotlin.resolve.BindingContext;
 import org.jetbrains.kotlin.resolve.BindingTrace;
+import org.jetbrains.kotlin.resolve.DescriptorUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +84,8 @@ public class TranslationContext {
         this.definitionPlace = definitionPlace;
         this.declarationDescriptor = declarationDescriptor;
         if (declarationDescriptor instanceof ClassDescriptor
-                && ((ClassDescriptor) declarationDescriptor).getKind() != ClassKind.OBJECT) {
+                && !DescriptorUtils.isAnonymousObject(declarationDescriptor)
+                && !DescriptorUtils.isObject(declarationDescriptor)) {
             this.classDescriptor = (ClassDescriptor) declarationDescriptor;
         } else {
             this.classDescriptor = parent != null ? parent.classDescriptor : null;
@@ -387,7 +389,10 @@ public class TranslationContext {
     private static ClassDescriptor getNearestClass(DeclarationDescriptor declaration) {
         while (declaration != null) {
             if (declaration instanceof ClassDescriptor) {
-                return (ClassDescriptor) declaration;
+                if (!DescriptorUtils.isAnonymousObject(declaration)
+                        && !DescriptorUtils.isObject(declaration)) {
+                    return (ClassDescriptor) declaration;
+                }
             }
             declaration = declaration.getContainingDeclaration();
         }
