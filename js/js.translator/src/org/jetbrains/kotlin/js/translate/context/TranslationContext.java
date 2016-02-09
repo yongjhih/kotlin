@@ -60,6 +60,8 @@ public class TranslationContext {
     private final DeclarationDescriptor declarationDescriptor;
     @Nullable
     private final ClassDescriptor classDescriptor;
+    @Nullable
+    private final ClassDescriptor objectDescriptor;
 
     @NotNull
     public static TranslationContext rootContext(@NotNull StaticContext staticContext, JsFunction rootFunction) {
@@ -92,6 +94,11 @@ public class TranslationContext {
             this.classDescriptor = (ClassDescriptor) declarationDescriptor;
         } else {
             this.classDescriptor = parent != null ? parent.classDescriptor : null;
+        }
+        if (declarationDescriptor instanceof ClassDescriptor && DescriptorUtils.isObject(declarationDescriptor)) {
+            this.objectDescriptor = (ClassDescriptor) declarationDescriptor;
+        } else {
+            this.objectDescriptor = parent != null ? parent.objectDescriptor : null;
         }
     }
 
@@ -340,6 +347,13 @@ public class TranslationContext {
         JsExpression alias = getAliasForDescriptor(descriptor);
         if (alias != null) {
             return alias;
+        }
+        if (DescriptorUtils.isObject(descriptor.getContainingDeclaration())) {
+            if (descriptor.getContainingDeclaration() == declarationDescriptor) {
+                return JsLiteral.THIS;
+            } else {
+                return getQualifiedReference(descriptor.getContainingDeclaration());
+            }
         }
         return getDispatchReceiverPath(getNearestClass(descriptor));
     }
