@@ -509,7 +509,7 @@ public fun <T> Sequence<T>.toHashSet(): HashSet<T> {
  * Returns a [List] containing all elements.
  */
 public fun <T> Sequence<T>.toList(): List<T> {
-    return this.toMutableList()
+    return this.toMutableList().optimizeReadOnlyList()
 }
 
 /**

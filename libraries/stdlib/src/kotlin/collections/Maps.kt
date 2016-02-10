@@ -280,7 +280,7 @@ public fun <K, V> MutableMap<in K, in V>.putAll(pairs: Sequence<Pair<K,V>>): Uni
  */
 @Suppress("NON_PUBLIC_CALL_FROM_PUBLIC_INLINE")
 public inline fun <K, V, R> Map<K, V>.mapValues(transform: (Map.Entry<K, V>) -> R): Map<K, R> {
-    return mapValuesTo(LinkedHashMap<K, R>(mapCapacity(size)), transform)
+    return mapValuesTo(LinkedHashMap<K, R>(mapCapacity(size)), transform).optimizeReadOnlyMap()
 }
 
 /**
@@ -291,7 +291,7 @@ public inline fun <K, V, R> Map<K, V>.mapValues(transform: (Map.Entry<K, V>) -> 
  */
 @Suppress("NON_PUBLIC_CALL_FROM_PUBLIC_INLINE")
 public inline fun <K, V, R> Map<K, V>.mapKeys(transform: (Map.Entry<K, V>) -> R): Map<R, V> {
-    return mapKeysTo(LinkedHashMap<R, V>(mapCapacity(size)), transform)
+    return mapKeysTo(LinkedHashMap<R, V>(mapCapacity(size)), transform).optimizeReadOnlyMap()
 }
 
 /**
@@ -389,7 +389,7 @@ public fun <K, V, M : MutableMap<in K, in V>> Array<out Pair<K, V>>.toMap(destin
  * Returns a new map containing all key-value pairs from the given sequence of pairs.
  */
 
-public fun <K, V> Sequence<Pair<K, V>>.toMap(): Map<K, V> = toMap(LinkedHashMap<K, V>())
+public fun <K, V> Sequence<Pair<K, V>>.toMap(): Map<K, V> = toMap(LinkedHashMap<K, V>()).optimizeReadOnlyMap()
 
 /**
  * Populates and returns the [destination] mutable map with key-value pairs from the given sequence of pairs.
@@ -468,3 +468,14 @@ public inline operator fun <K, V> MutableMap<in K, in V>.plusAssign(pairs: Seque
 public inline operator fun <K, V> MutableMap<in K, in V>.plusAssign(map: Map<K, V>) {
     putAll(map)
 }
+
+
+@kotlin.internal.InlineExposed
+internal fun <K, V> Map<K, V>.optimizeReadOnlyMap() = when (size) {
+    0 -> emptyMap()
+    1 -> with (entries.iterator().next()) { singletonMapOf(key, value) }
+    else -> this
+}
+
+@kotlin.jvm.JvmVersion
+internal fun <K, V> singletonMapOf(key: K, value: V): Map<K, V> = Collections.singletonMap(key, value)

@@ -6272,63 +6272,99 @@ public fun CharArray.toHashSet(): HashSet<Char> {
  * Returns a [List] containing all elements.
  */
 public fun <T> Array<out T>.toList(): List<T> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun ByteArray.toList(): List<Byte> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun ShortArray.toList(): List<Short> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun IntArray.toList(): List<Int> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun LongArray.toList(): List<Long> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun FloatArray.toList(): List<Float> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun DoubleArray.toList(): List<Double> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun BooleanArray.toList(): List<Boolean> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
  * Returns a [List] containing all elements.
  */
 public fun CharArray.toList(): List<Char> {
-    return this.toMutableList()
+    return when (size) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**

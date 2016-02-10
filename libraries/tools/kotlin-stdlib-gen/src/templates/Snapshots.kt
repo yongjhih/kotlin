@@ -89,9 +89,19 @@ fun snapshots(): List<GenericFunction> {
         returns("List<Pair<K, V>>")
         body {
             """
+            if (size == 0)
+                return emptyList()
+            val iterator = entries.iterator()
+            if (!iterator.hasNext())
+                return emptyList()
+            val first = iterator.next()
+            if (!iterator.hasNext())
+                return listOf(first.toPair())
             val result = ArrayList<Pair<K, V>>(size)
-            for (item in this)
-                result.add(item.key to item.value)
+            result.add(first.toPair())
+            do {
+                result.add(iterator.next().toPair())
+            } while (iterator.hasNext())
             return result
             """
         }
@@ -101,7 +111,28 @@ fun snapshots(): List<GenericFunction> {
         include(CharSequences)
         doc { f -> "Returns a [List] containing all ${f.element.pluralize()}." }
         returns("List<T>")
-        body { "return this.toMutableList()" }
+        body { "return this.toMutableList().optimizeReadOnlyList()" }
+        body(Iterables) {
+            """
+            if (this is Collection) {
+                return when (size) {
+                    0 -> emptyList()
+                    1 -> listOf(if (this is List) get(0) else iterator().next())
+                    else -> this.toMutableList()
+                }
+            }
+            return this.toMutableList().optimizeReadOnlyList()
+            """
+        }
+        body(CharSequences, ArraysOfPrimitives, ArraysOfObjects) { f ->
+            """
+            return when (${ if (f == CharSequences) "length" else "size" }) {
+                0 -> emptyList()
+                1 -> listOf(this[0])
+                else -> this.toMutableList()
+            }
+            """
+        }
     }
 
     templates add f("associate(transform: (T) -> Pair<K, V>)") {

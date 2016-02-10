@@ -584,7 +584,11 @@ public fun CharSequence.toHashSet(): HashSet<Char> {
  * Returns a [List] containing all characters.
  */
 public fun CharSequence.toList(): List<Char> {
-    return this.toMutableList()
+    return when (length) {
+        0 -> emptyList()
+        1 -> listOf(this[0])
+        else -> this.toMutableList()
+    }
 }
 
 /**
