@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.cli
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.util.text.StringUtil
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.jetbrains.kotlin.test.KotlinTestUtils
 import org.jetbrains.kotlin.test.TestCaseWithTmpdir
@@ -31,21 +32,25 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
             vararg args: String,
             expectedStdout: String = "",
             expectedStderr: String = "",
-            expectedExitCode: ExitCode = ExitCode.OK
+            expectedExitCode: Int = ExitCode.OK.code
     ) {
         val executableFileName = if (SystemInfo.isWindows) "$executableName.bat" else executableName
         val launcherFile = File(PathUtil.getKotlinPathsForDistDirectory().homePath, "bin/$executableFileName")
         assertTrue("Launcher script not found, run 'ant dist': ${launcherFile.absolutePath}", launcherFile.exists())
 
         val processOutput = ExecUtil.execAndGetOutput(GeneralCommandLine(launcherFile.absolutePath, *args))
-        val (stdout, stderr, exitCode) = Triple(processOutput.stdout, processOutput.stderr, processOutput.exitCode)
+        val (stdout, stderr, exitCode) = Triple(
+                StringUtil.convertLineSeparators(processOutput.stdout).trim(),
+                StringUtil.convertLineSeparators(processOutput.stderr).trim(),
+                processOutput.exitCode
+        )
 
         try {
             assertEquals(expectedStdout, stdout)
             assertEquals(expectedStderr, stderr)
-            assertEquals(expectedExitCode.code, exitCode)
+            assertEquals(expectedExitCode, exitCode)
         }
-        catch (e: Exception) {
+        catch (e: Throwable) {
             System.err.println("exit code $exitCode")
             System.err.println("<stdout>$stdout</stdout>")
             System.err.println("<stderr>$stderr</stderr>")
@@ -78,6 +83,68 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
                 "$testDataDirectory/emptyMain.kt",
                 "-no-stdlib",
                 "-output", File(tmpdir, "out.js").path
+        )
+    }
+
+    fun testKotlinSimple() {
+        runProcess("kotlinc", "$testDataDirectory/helloWorld.kt", "-d", tmpdir.path)
+        runProcess(
+                "kotlin",
+                "-cp", tmpdir.path,
+                "test.HelloWorldKt",
+                expectedStdout = "Hello!"
+        )
+    }
+
+    fun testKotlinFromJar() {
+        val jarFile = File(tmpdir, "out.jar").path
+        runProcess("kotlinc", "$testDataDirectory/helloWorld.kt", "-d", jarFile)
+        runProcess(
+                "kotlin",
+                "-cp", jarFile,
+                "test.HelloWorldKt",
+                expectedStdout = "Hello!"
+        )
+    }
+
+    fun testPassSystemProperties() {
+        runProcess("kotlinc", "$testDataDirectory/systemProperties.kt", "-d", tmpdir.path)
+        runProcess(
+                "kotlin",
+                "-cp", tmpdir.path,
+                "-Dfoo.name=foo.value",
+                "-J-Dbar.name=bar.value",
+                "test.SystemPropertiesKt",
+                expectedStdout = "foo.name=foo.value\nbar.name=bar.value"
+        )
+    }
+
+    fun testSanitizedStackTrace() {
+        runProcess("kotlinc", "$testDataDirectory/throwException.kt", "-d", tmpdir.path)
+        runProcess(
+                "kotlin",
+                "-cp", tmpdir.path,
+                "test.ThrowExceptionKt",
+                expectedExitCode = 1,
+                expectedStderr = """
+Exception in thread "main" java.lang.RuntimeException: RE
+	at test.ThrowExceptionKt.f7(throwException.kt:40)
+	at test.ThrowExceptionKt.f8(throwException.kt:45)
+	at test.ThrowExceptionKt.f9(throwException.kt:49)
+	at test.ThrowExceptionKt.main(throwException.kt:53)
+Caused by: java.lang.IllegalStateException: ISE
+	at test.ThrowExceptionKt.f4(throwException.kt:23)
+	at test.ThrowExceptionKt.f5(throwException.kt:28)
+	at test.ThrowExceptionKt.f6(throwException.kt:32)
+	at test.ThrowExceptionKt.f7(throwException.kt:37)
+	... 3 more
+Caused by: java.lang.AssertionError: assert
+	at test.ThrowExceptionKt.f1(throwException.kt:7)
+	at test.ThrowExceptionKt.f2(throwException.kt:11)
+	at test.ThrowExceptionKt.f3(throwException.kt:15)
+	at test.ThrowExceptionKt.f4(throwException.kt:20)
+	... 6 more
+""".trim()
         )
     }
 }
