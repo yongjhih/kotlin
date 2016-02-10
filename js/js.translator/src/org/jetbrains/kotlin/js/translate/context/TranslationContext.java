@@ -92,12 +92,14 @@ public class TranslationContext {
                 && !DescriptorUtils.isAnonymousObject(declarationDescriptor)
                 && !DescriptorUtils.isObject(declarationDescriptor)) {
             this.classDescriptor = (ClassDescriptor) declarationDescriptor;
-        } else {
+        }
+        else {
             this.classDescriptor = parent != null ? parent.classDescriptor : null;
         }
         if (declarationDescriptor instanceof ClassDescriptor && DescriptorUtils.isObject(declarationDescriptor)) {
             this.objectDescriptor = (ClassDescriptor) declarationDescriptor;
-        } else {
+        }
+        else {
             this.objectDescriptor = parent != null ? parent.objectDescriptor : null;
         }
     }
@@ -133,7 +135,7 @@ public class TranslationContext {
         DynamicContext dynamicContext = DynamicContext.newContext(fun.getScope(), fun.getBody());
         UsageTracker usageTracker = new UsageTracker(this.usageTracker, descriptor, fun.getScope());
         return new TranslationContext(this, this.staticContext, dynamicContext, this.aliasingContext.inner(), usageTracker, this.definitionPlace,
-                                      this.declarationDescriptor);
+                                      descriptor);
     }
 
     @NotNull
@@ -349,13 +351,24 @@ public class TranslationContext {
             return alias;
         }
         if (DescriptorUtils.isObject(descriptor.getContainingDeclaration())) {
-            if (descriptor.getContainingDeclaration() == declarationDescriptor) {
+            if (isConstructorOrDirectScope(descriptor.getContainingDeclaration())) {
                 return JsLiteral.THIS;
-            } else {
+            }
+            else {
                 return getQualifiedReference(descriptor.getContainingDeclaration());
             }
         }
         return getDispatchReceiverPath(getNearestClass(descriptor));
+    }
+
+    private boolean isConstructorOrDirectScope(DeclarationDescriptor descriptor) {
+        if (descriptor == declarationDescriptor) {
+            return true;
+        }
+        if (declarationDescriptor instanceof ConstructorDescriptor) {
+            return descriptor == declarationDescriptor.getContainingDeclaration();
+        }
+        return false;
     }
 
     @NotNull
@@ -410,8 +423,7 @@ public class TranslationContext {
     private static ClassDescriptor getNearestClass(@Nullable DeclarationDescriptor declaration) {
         while (declaration != null) {
             if (declaration instanceof ClassDescriptor) {
-                if (!DescriptorUtils.isAnonymousObject(declaration)
-                        && !DescriptorUtils.isObject(declaration)) {
+                if (!DescriptorUtils.isAnonymousObject(declaration) && !DescriptorUtils.isObject(declaration)) {
                     return (ClassDescriptor) declaration;
                 }
             }
