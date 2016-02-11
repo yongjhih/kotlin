@@ -131,6 +131,7 @@ fun elements(): List<GenericFunction> {
     templates add f("indexOfFirst(predicate: (T) -> Boolean)") {
         inline(true)
 
+        include(Lists)
         doc { f -> "Returns index of the first ${f.element} matching the given [predicate], or -1 if the ${f.collection} does not contain such ${f.element}." }
         returns("Int")
         body {
@@ -145,7 +146,7 @@ fun elements(): List<GenericFunction> {
             """
         }
 
-        body(Lists, CharSequences, ArraysOfPrimitives, ArraysOfObjects) {
+        body(CharSequences, ArraysOfPrimitives, ArraysOfObjects) {
             """
             for (index in indices) {
                 if (predicate(this[index])) {
@@ -175,11 +176,22 @@ fun elements(): List<GenericFunction> {
             """
         }
 
-        body(Lists, CharSequences, ArraysOfPrimitives, ArraysOfObjects) {
+        body(CharSequences, ArraysOfPrimitives, ArraysOfObjects) {
             """
             for (index in indices.reversed()) {
                 if (predicate(this[index])) {
                     return index
+                }
+            }
+            return -1
+            """
+        }
+        body(Lists) {
+            """
+            val iterator = this.listIterator(size)
+            while (iterator.hasPrevious()) {
+                if (predicate(iterator.previous())) {
+                    return iterator.nextIndex()
                 }
             }
             return -1
@@ -555,6 +567,16 @@ fun elements(): List<GenericFunction> {
             throw NoSuchElementException("Collection doesn't contain any element matching the predicate.")
             """
         }
+        body(Lists) {
+            """
+            val iterator = this.listIterator(size)
+            while (iterator.hasPrevious()) {
+                val element = iterator.previous()
+                if (predicate(element)) return element
+            }
+            throw NoSuchElementException("List doesn't contain any element matching the predicate.")
+            """
+        }
     }
 
     templates add f("lastOrNull(predicate: (T) -> Boolean)") {
@@ -580,7 +602,7 @@ fun elements(): List<GenericFunction> {
             """
         }
 
-        body(CharSequences, ArraysOfPrimitives, ArraysOfObjects, Lists) {
+        body(CharSequences, ArraysOfPrimitives, ArraysOfObjects) {
             """
             for (index in this.indices.reversed()) {
                 val element = this[index]
@@ -589,6 +611,17 @@ fun elements(): List<GenericFunction> {
             return null
             """
         }
+        body(Lists) {
+            """
+            val iterator = this.listIterator(size)
+            while (iterator.hasPrevious()) {
+                val element = iterator.previous()
+                if (predicate(element)) return element
+            }
+            return null
+            """
+        }
+
     }
 
     templates add f("findLast(predicate: (T) -> Boolean)") {

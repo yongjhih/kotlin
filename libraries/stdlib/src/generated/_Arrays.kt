@@ -10203,7 +10203,7 @@ public inline fun CharArray.reduceIndexed(operation: (Int, Char, Char) -> Char):
  */
 public inline fun <S, T: S> Array<out T>.reduceRight(operation: (T, S) -> S): S {
     var index = lastIndex
-    if (index < 0) throw UnsupportedOperationException("Empty iterable can't be reduced.")
+    if (index < 0) throw UnsupportedOperationException("Empty array can't be reduced.")
     var accumulator: S = get(index--)
     while (index >= 0) {
         accumulator = operation(get(index--), accumulator)

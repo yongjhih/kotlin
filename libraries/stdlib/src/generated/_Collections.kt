@@ -283,10 +283,11 @@ public inline fun <T> Iterable<T>.indexOfFirst(predicate: (T) -> Boolean): Int {
  * Returns index of the first element matching the given [predicate], or -1 if the list does not contain such element.
  */
 public inline fun <T> List<T>.indexOfFirst(predicate: (T) -> Boolean): Int {
-    for (index in indices) {
-        if (predicate(this[index])) {
+    var index = 0
+    for (item in this) {
+        if (predicate(item))
             return index
-        }
+        index++
     }
     return -1
 }
@@ -309,9 +310,10 @@ public inline fun <T> Iterable<T>.indexOfLast(predicate: (T) -> Boolean): Int {
  * Returns index of the last element matching the given [predicate], or -1 if the list does not contain such element.
  */
 public inline fun <T> List<T>.indexOfLast(predicate: (T) -> Boolean): Int {
-    for (index in indices.reversed()) {
-        if (predicate(this[index])) {
-            return index
+    val iterator = this.listIterator(size)
+    while (iterator.hasPrevious()) {
+        if (predicate(iterator.previous())) {
+            return iterator.nextIndex()
         }
     }
     return -1
@@ -375,11 +377,12 @@ public inline fun <T> Iterable<T>.last(predicate: (T) -> Boolean): T {
  * @throws [NoSuchElementException] if no such element is found.
  */
 public inline fun <T> List<T>.last(predicate: (T) -> Boolean): T {
-    for (index in this.indices.reversed()) {
-        val element = this[index]
+    val iterator = this.listIterator(size)
+    while (iterator.hasPrevious()) {
+        val element = iterator.previous()
         if (predicate(element)) return element
     }
-    throw NoSuchElementException("Collection doesn't contain any element matching the predicate.")
+    throw NoSuchElementException("List doesn't contain any element matching the predicate.")
 }
 
 /**
@@ -448,8 +451,9 @@ public inline fun <T> Iterable<T>.lastOrNull(predicate: (T) -> Boolean): T? {
  * Returns the last element matching the given [predicate], or `null` if no such element was found.
  */
 public inline fun <T> List<T>.lastOrNull(predicate: (T) -> Boolean): T? {
-    for (index in this.indices.reversed()) {
-        val element = this[index]
+    val iterator = this.listIterator(size)
+    while (iterator.hasPrevious()) {
+        val element = iterator.previous()
         if (predicate(element)) return element
     }
     return null
@@ -560,8 +564,8 @@ public fun <T> Iterable<T>.drop(n: Int): List<T> {
             return emptyList()
         list = ArrayList<T>(resultSize)
         if (this is List<T>) {
-            for (index in n..size - 1) {
-                list.add(this[index])
+            for (item in listIterator(n)) {
+                list.add(item)
             }
             return list
         }
@@ -588,9 +592,12 @@ public fun <T> List<T>.dropLast(n: Int): List<T> {
  * Returns a list containing all elements except last elements that satisfy the given [predicate].
  */
 public inline fun <T> List<T>.dropLastWhile(predicate: (T) -> Boolean): List<T> {
-    for (index in lastIndex downTo 0) {
-        if (!predicate(this[index])) {
-            return take(index + 1)
+    if (!isEmpty()) {
+        val iterator = listIterator(size)
+        while (iterator.hasPrevious()) {
+            if (!predicate(iterator.previous())) {
+                return take(iterator.nextIndex() + 1)
+            }
         }
     }
     return emptyList()
@@ -721,18 +728,28 @@ public fun <T> List<T>.takeLast(n: Int): List<T> {
     val size = size
     if (n >= size) return toList()
     val list = ArrayList<T>(n)
-    for (index in size - n .. size - 1)
-        list.add(this[index])
+    if (this is RandomAccess) {
+        for (index in size - n .. size - 1)
+            list.add(this[index])
+    } else {
+        for (item in listIterator(n))
+            list.add(item)
+    }
     return list
 }
 
 /**
  * Returns a list containing last elements satisfying the given [predicate].
  */
+@Suppress("NON_PUBLIC_CALL_FROM_PUBLIC_INLINE")
 public inline fun <T> List<T>.takeLastWhile(predicate: (T) -> Boolean): List<T> {
-    for (index in lastIndex downTo 0) {
-        if (!predicate(this[index])) {
-            return drop(index + 1)
+    if (isEmpty())
+        return emptyList()
+    val iterator = listIterator(size)
+    while (iterator.hasPrevious()) {
+        if (!predicate(iterator.previous())) {
+            iterator.next()
+            return iterator.toList(size - iterator.nextIndex())
         }
     }
     return toList()
@@ -1336,10 +1353,12 @@ public inline fun <T, R> Iterable<T>.foldIndexed(initial: R, operation: (Int, R,
  * Accumulates value starting with [initial] value and applying [operation] from right to left to each element and current accumulator value.
  */
 public inline fun <T, R> List<T>.foldRight(initial: R, operation: (T, R) -> R): R {
-    var index = lastIndex
     var accumulator = initial
-    while (index >= 0) {
-        accumulator = operation(get(index--), accumulator)
+    if (!isEmpty()) {
+        val iterator = listIterator(size)
+        while (iterator.hasPrevious()) {
+            accumulator = operation(iterator.previous(), accumulator)
+        }
     }
     return accumulator
 }
@@ -1349,11 +1368,13 @@ public inline fun <T, R> List<T>.foldRight(initial: R, operation: (T, R) -> R): 
  * to each element with its index in the original list and current accumulator value.
  */
 public inline fun <T, R> List<T>.foldRightIndexed(initial: R, operation: (Int, T, R) -> R): R {
-    var index = lastIndex
     var accumulator = initial
-    while (index >= 0) {
-        accumulator = operation(index, get(index), accumulator)
-        --index
+    if (!isEmpty()) {
+        val iterator = listIterator(size)
+        while (iterator.hasPrevious()) {
+            val index = iterator.previousIndex()
+            accumulator = operation(index, iterator.previous(), accumulator)
+        }
     }
     return accumulator
 }
@@ -1516,11 +1537,12 @@ public inline fun <S, T: S> Iterable<T>.reduceIndexed(operation: (Int, S, T) -> 
  * Accumulates value starting with last element and applying [operation] from right to left to each element and current accumulator value.
  */
 public inline fun <S, T: S> List<T>.reduceRight(operation: (T, S) -> S): S {
-    var index = lastIndex
-    if (index < 0) throw UnsupportedOperationException("Empty iterable can't be reduced.")
-    var accumulator: S = get(index--)
-    while (index >= 0) {
-        accumulator = operation(get(index--), accumulator)
+    val iterator = listIterator(size)
+    if (!iterator.hasPrevious())
+        throw UnsupportedOperationException("Empty list can't be reduced.")
+    var accumulator: S = iterator.previous()
+    while (iterator.hasPrevious()) {
+        accumulator = operation(iterator.previous(), accumulator)
     }
     return accumulator
 }
@@ -1530,12 +1552,13 @@ public inline fun <S, T: S> List<T>.reduceRight(operation: (T, S) -> S): S {
  * to each element with its index in the original list and current accumulator value.
  */
 public inline fun <S, T: S> List<T>.reduceRightIndexed(operation: (Int, T, S) -> S): S {
-    var index = lastIndex
-    if (index < 0) throw UnsupportedOperationException("Empty list can't be reduced.")
-    var accumulator: S = get(index--)
-    while (index >= 0) {
-        accumulator = operation(index, get(index), accumulator)
-        --index
+    val iterator = listIterator(size)
+    if (!iterator.hasPrevious())
+        throw UnsupportedOperationException("Empty list can't be reduced.")
+    var accumulator: S = iterator.previous()
+    while (iterator.hasPrevious()) {
+        val index = iterator.previousIndex()
+        accumulator = operation(index, iterator.previous(), accumulator)
     }
     return accumulator
 }
