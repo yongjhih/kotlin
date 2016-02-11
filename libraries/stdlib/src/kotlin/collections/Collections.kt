@@ -137,13 +137,6 @@ internal fun <T> List<T>.optimizeReadOnlyList() = when (size) {
     else -> this
 }
 
-@kotlin.internal.InlineExposed
-internal fun <T> Set<T>.optimizeReadOnlySet() = when (size) {
-    0 -> emptySet()
-    1 -> setOf(iterator().next())
-    else -> this
-}
-
 // copies typed varargs array to array of objects
 @JvmVersion
 private fun <T> Array<out T>.varargToArrayOfAny(): Array<Any?>

@@ -523,7 +523,7 @@ public fun <T> Sequence<T>.toMutableList(): MutableList<T> {
  * Returns a [Set] of all elements.
  */
 public fun <T> Sequence<T>.toSet(): Set<T> {
-    return toCollection(LinkedHashSet<T>())
+    return toCollection(LinkedHashSet<T>()).optimizeReadOnlySet()
 }
 
 /**

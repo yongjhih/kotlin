@@ -602,7 +602,11 @@ public fun CharSequence.toMutableList(): MutableList<Char> {
  * Returns a [Set] of all characters.
  */
 public fun CharSequence.toSet(): Set<Char> {
-    return toCollection(LinkedHashSet<Char>(mapCapacity(length)))
+    return when (length) {
+        0 -> emptySet()
+        1 -> setOf(this[0])
+        else -> toCollection(LinkedHashSet<Char>(mapCapacity(length)))
+    }
 }
 
 /**

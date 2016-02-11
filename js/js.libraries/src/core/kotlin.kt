@@ -75,7 +75,7 @@ internal fun <T> arrayPlusCollection(array: dynamic, collection: Collection<T>):
     return result
 }
 
-internal fun <K, V> singletonMapOf(key: K, value: V): Map<K, V> = mapOf(key to value)
+internal inline fun <K, V> Map<K, V>.toSingletonMap(): Map<K, V> = this
 
 // copies vararg array due to different spread vararg behavior in JS.
 // After fixing #KT-6491 may return `this`

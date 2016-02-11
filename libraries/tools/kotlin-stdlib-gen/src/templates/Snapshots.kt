@@ -23,10 +23,31 @@ fun snapshots(): List<GenericFunction> {
     templates add f("toSet()") {
         doc { f -> "Returns a [Set] of all ${f.element.pluralize()}." }
         returns("Set<T>")
-        body { "return toCollection(LinkedHashSet<T>(mapCapacity(collectionSizeOrDefault(12))))" }
-        body(Sequences) { "return toCollection(LinkedHashSet<T>())" }
-        body(CharSequences) { "return toCollection(LinkedHashSet<T>(mapCapacity(length)))" }
-        body(ArraysOfObjects, ArraysOfPrimitives) { "return toCollection(LinkedHashSet<T>(mapCapacity(size)))" }
+        body(Iterables) {
+            """
+            if (this is Collection) {
+                return when (size) {
+                    0 -> emptySet()
+                    1 -> setOf(if (this is List) this[0] else iterator().next())
+                    else -> toCollection(LinkedHashSet<T>(mapCapacity(size)))
+                }
+
+            }
+            return toCollection(LinkedHashSet<T>()).optimizeReadOnlySet()
+            """
+        }
+        body(Sequences) { "return toCollection(LinkedHashSet<T>()).optimizeReadOnlySet()" }
+
+        body(CharSequences, ArraysOfObjects, ArraysOfPrimitives) { f ->
+            val size = if (f == CharSequences) "length" else "size"
+            """
+            return when ($size) {
+                0 -> emptySet()
+                1 -> setOf(this[0])
+                else -> toCollection(LinkedHashSet<T>(mapCapacity($size)))
+            }
+            """
+        }
     }
 
     templates add f("toHashSet()") {
