@@ -446,18 +446,16 @@ fun aggregates(): List<GenericFunction> {
         }
         returns("T")
         body { f ->
-            with (DocExtensions) {
-                """
-                if (isEmpty())
-                    throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+            """
+            if (isEmpty())
+                throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
-                var accumulator = this[0]
-                for (index in 1..lastIndex) {
-                    accumulator = operation(index, accumulator, this[index])
-                }
-                return accumulator
-                """
+            var accumulator = this[0]
+            for (index in 1..lastIndex) {
+                accumulator = operation(index, accumulator, this[index])
             }
+            return accumulator
+            """
         }
     }
 
@@ -488,10 +486,10 @@ fun aggregates(): List<GenericFunction> {
             """
         }
         body(ArraysOfObjects) { f ->
-            with (DocExtensions) {
+            run {
                 """
                 if (isEmpty())
-                    throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+                    throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
                 var accumulator: S = this[0]
                 for (index in 1..lastIndex) {
@@ -515,20 +513,18 @@ fun aggregates(): List<GenericFunction> {
         }
         returns("T")
         body { f ->
-            with (DocExtensions) {
-                """
-                var index = lastIndex
-                if (index < 0) throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+            """
+            var index = lastIndex
+            if (index < 0) throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
-                var accumulator = get(index--)
-                while (index >= 0) {
-                    accumulator = operation(index, get(index), accumulator)
-                    --index
-                }
-
-                return accumulator
-                """
+            var accumulator = get(index--)
+            while (index >= 0) {
+                accumulator = operation(index, get(index), accumulator)
+                --index
             }
+
+            return accumulator
+            """
         }
     }
 
@@ -546,20 +542,18 @@ fun aggregates(): List<GenericFunction> {
         typeParam("T: S")
         returns("S")
         body { f ->
-            with (DocExtensions) {
-                """
-                var index = lastIndex
-                if (index < 0) throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+            """
+            var index = lastIndex
+            if (index < 0) throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
-                var accumulator: S = get(index--)
-                while (index >= 0) {
-                    accumulator = operation(index, get(index), accumulator)
-                    --index
-                }
-
-                return accumulator
-                """
+            var accumulator: S = get(index--)
+            while (index >= 0) {
+                accumulator = operation(index, get(index), accumulator)
+                --index
             }
+
+            return accumulator
+            """
         }
     }
 
@@ -570,18 +564,16 @@ fun aggregates(): List<GenericFunction> {
         doc { f -> "Accumulates value starting with the first ${f.element} and applying [operation] from left to right to current accumulator value and each ${f.element}." }
         returns("T")
         body { f ->
-            with (DocExtensions) {
-                """
-                if (isEmpty())
-                    throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+            """
+            if (isEmpty())
+                throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
-                var accumulator = this[0]
-                for (index in 1..lastIndex) {
-                    accumulator = operation(accumulator, this[index])
-                }
-                return accumulator
-                """
+            var accumulator = this[0]
+            for (index in 1..lastIndex) {
+                accumulator = operation(accumulator, this[index])
             }
+            return accumulator
+            """
         }
     }
 
@@ -606,18 +598,16 @@ fun aggregates(): List<GenericFunction> {
             """
         }
         body(ArraysOfObjects) { f ->
-            with (DocExtensions) {
-                """
-                if (isEmpty())
-                    throw UnsupportedOperationException("Empty ${f.collection} can't be reduced.")
+            """
+            if (isEmpty())
+                throw UnsupportedOperationException("Empty ${f.doc.collection} can't be reduced.")
 
-                var accumulator: S = this[0]
-                for (index in 1..lastIndex) {
-                    accumulator = operation(accumulator, this[index])
-                }
-                return accumulator
-                """
+            var accumulator: S = this[0]
+            for (index in 1..lastIndex) {
+                accumulator = operation(accumulator, this[index])
             }
+            return accumulator
+            """
         }
     }
 
