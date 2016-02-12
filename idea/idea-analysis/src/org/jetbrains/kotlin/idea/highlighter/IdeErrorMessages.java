@@ -25,8 +25,10 @@ import org.jetbrains.kotlin.diagnostics.rendering.*;
 import org.jetbrains.kotlin.js.resolve.diagnostics.ErrorsJs;
 import org.jetbrains.kotlin.js.resolve.diagnostics.JsCallDataHtmlRenderer;
 import org.jetbrains.kotlin.renderer.DescriptorRenderer;
+import org.jetbrains.kotlin.types.KotlinType;
 
 import java.net.URL;
+import java.util.Arrays;
 
 import static org.jetbrains.kotlin.diagnostics.Errors.*;
 import static org.jetbrains.kotlin.diagnostics.rendering.Renderers.RENDER_CLASS_OR_OBJECT;
@@ -62,8 +64,15 @@ public class IdeErrorMessages {
     }
 
     static {
-        MAP.put(TYPE_MISMATCH, "<html>Type mismatch.<table><tr><td>Required:</td><td>{0}</td></tr><tr><td>Found:</td><td>{1}</td></tr></table></html>",
-                HTML_RENDER_TYPE, HTML_RENDER_TYPE);
+        MAP.put(TYPE_MISMATCH,
+                "<html>Type mismatch.<table><tr><td>Required:</td><td>{0}</td></tr><tr><td>Found:</td><td>{1}</td></tr></table></html>",
+                new MultiRenderer2<KotlinType, KotlinType>() {
+                    @NotNull
+                    @Override
+                    public String[] render(KotlinType type, KotlinType type2) {
+                        return RenderDifferentTypesKt.renderTypes(Arrays.asList(type, type2));
+                    }
+                });
 
         MAP.put(TYPE_MISMATCH_DUE_TO_TYPE_PROJECTIONS,
                 "<html>Type mismatch.<table><tr><td>Required:</td><td>{0}</td></tr><tr><td>Found:</td><td>{1}</td></tr></table><br />\n" +

@@ -30,6 +30,8 @@ import org.jetbrains.kotlin.resolve.constants.AnnotationValue
 import org.jetbrains.kotlin.resolve.constants.ArrayValue
 import org.jetbrains.kotlin.resolve.constants.ConstantValue
 import org.jetbrains.kotlin.resolve.constants.KClassValue
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameUnsafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.hasDefaultValue
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.ErrorUtils.UninferredParameterTypeConstructor
@@ -278,6 +280,9 @@ internal class DescriptorRendererImpl(
 
     override fun renderTypeConstructor(typeConstructor: TypeConstructor): String {
         val cd = typeConstructor.declarationDescriptor
+        if (cd != null) {
+            options.customTypeConstructorRenderer.invoke(cd)?.let { return it }
+        }
         return when (cd) {
             is TypeParameterDescriptor -> renderName(cd.getName())
             is ClassDescriptor -> renderClassifierName(cd)

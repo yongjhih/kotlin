@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.renderer
 
+import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.types.KotlinType
 import java.lang.reflect.Modifier
@@ -98,4 +99,5 @@ internal class DescriptorRendererOptionsImpl : DescriptorRendererOptions {
                     + ExcludedTypeAnnotations.internalAnnotationsForResolve)
 
     override var alwaysRenderModifiers by property(false)
+    override var customTypeConstructorRenderer: (ClassifierDescriptor) -> String? by property({ desc -> null })
 }

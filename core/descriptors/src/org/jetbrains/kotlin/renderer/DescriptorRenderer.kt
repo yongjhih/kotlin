@@ -190,6 +190,7 @@ interface DescriptorRendererOptions {
     var renderAccessors: Boolean
     var renderDefaultAnnotationArguments: Boolean
     var alwaysRenderModifiers: Boolean
+    var customTypeConstructorRenderer: (ClassifierDescriptor) -> String?
 }
 
 object ExcludedTypeAnnotations {
