@@ -20,7 +20,6 @@ import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.diagnostics.*;
-import org.jetbrains.kotlin.renderer.MultiRenderer;
 import org.jetbrains.kotlin.renderer.Renderer;
 
 import java.util.HashMap;
@@ -60,9 +59,9 @@ public final class DiagnosticFactoryToRendererMap {
         map.put(factory, new DiagnosticWithParameters1Renderer<A>(message, rendererA));
     }
 
-    public <E extends PsiElement, A> void put(@NotNull DiagnosticFactory1<E, A> factory, @NotNull String message, @NotNull MultiRenderer<? super A> rendererA) {
+    public <E extends PsiElement, A> void put(@NotNull DiagnosticFactory1<E, A> factory, @NotNull String message, @NotNull MultiRenderer1<? super A> rendererA) {
         checkMutability();
-        map.put(factory, new DiagnosticWithMultiParametersRenderer<A>(message, rendererA));
+        map.put(factory, new DiagnosticWithParameters1MultiRenderer<A>(message, rendererA));
     }
 
     public <E extends PsiElement, A, B> void put(@NotNull DiagnosticFactory2<E, A, B> factory,
@@ -73,6 +72,15 @@ public final class DiagnosticFactoryToRendererMap {
         map.put(factory, new DiagnosticWithParameters2Renderer<A, B>(message, rendererA, rendererB));
     }
 
+    public <E extends PsiElement, A, B> void put(
+            @NotNull DiagnosticFactory2<E, A, B> factory,
+            @NotNull String message,
+            @NotNull MultiRenderer2<A, B> multiRenderer2
+    ) {
+        checkMutability();
+        map.put(factory, new DiagnosticWithParameters2MultiRenderer<A, B>(message, multiRenderer2));
+    }
+
     public <E extends PsiElement, A, B, C> void put(@NotNull DiagnosticFactory3<E, A, B, C> factory,
             @NotNull String message,
             @Nullable Renderer<? super A> rendererA,
@@ -80,6 +88,15 @@ public final class DiagnosticFactoryToRendererMap {
             @Nullable  Renderer<? super C> rendererC) {
         checkMutability();
         map.put(factory, new DiagnosticWithParameters3Renderer<A, B, C>(message, rendererA, rendererB, rendererC));
+    }
+
+    public <E extends PsiElement, A, B, C> void put(
+            @NotNull DiagnosticFactory3<E, A, B, C> factory,
+            @NotNull String message,
+            @NotNull MultiRenderer3<A, B, C> multiRenderer3
+    ) {
+        checkMutability();
+        map.put(factory, new DiagnosticWithParameters3MultiRenderer<A, B, C>(message, multiRenderer3));
     }
 
     @Nullable

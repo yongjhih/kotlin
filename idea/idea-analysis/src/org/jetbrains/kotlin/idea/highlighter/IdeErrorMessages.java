@@ -21,14 +21,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.kotlin.diagnostics.Diagnostic;
 import org.jetbrains.kotlin.diagnostics.TypeMismatchDueToTypeProjectionsData;
-import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages;
-import org.jetbrains.kotlin.diagnostics.rendering.DiagnosticFactoryToRendererMap;
-import org.jetbrains.kotlin.diagnostics.rendering.DiagnosticRenderer;
-import org.jetbrains.kotlin.diagnostics.rendering.Renderers;
+import org.jetbrains.kotlin.diagnostics.rendering.*;
 import org.jetbrains.kotlin.js.resolve.diagnostics.ErrorsJs;
 import org.jetbrains.kotlin.js.resolve.diagnostics.JsCallDataHtmlRenderer;
 import org.jetbrains.kotlin.renderer.DescriptorRenderer;
-import org.jetbrains.kotlin.renderer.MultiRenderer;
 
 import java.net.URL;
 
@@ -72,7 +68,7 @@ public class IdeErrorMessages {
         MAP.put(TYPE_MISMATCH_DUE_TO_TYPE_PROJECTIONS,
                 "<html>Type mismatch.<table><tr><td>Required:</td><td>{0}</td></tr><tr><td>Found:</td><td>{1}</td></tr></table><br />\n" +
                 "Projected type {2} restricts use of <br />\n{3}\n</html>",
-                new MultiRenderer<TypeMismatchDueToTypeProjectionsData>() {
+                new MultiRenderer1<TypeMismatchDueToTypeProjectionsData>() {
                     @NotNull
                     @Override
                     public String[] render(@NotNull TypeMismatchDueToTypeProjectionsData object) {

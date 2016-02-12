@@ -31,7 +31,6 @@ import org.jetbrains.kotlin.psi.KtSimpleNameExpression;
 import org.jetbrains.kotlin.psi.KtTypeConstraint;
 import org.jetbrains.kotlin.renderer.DescriptorRenderer;
 import org.jetbrains.kotlin.renderer.DescriptorRendererOptions;
-import org.jetbrains.kotlin.renderer.MultiRenderer;
 import org.jetbrains.kotlin.renderer.Renderer;
 import org.jetbrains.kotlin.resolve.varianceChecker.VarianceChecker.VarianceConflictDiagnosticData;
 import org.jetbrains.kotlin.types.KotlinType;
@@ -131,7 +130,7 @@ public class DefaultErrorMessages {
         MAP.put(TYPE_MISMATCH, "Type mismatch: inferred type is {1} but {0} was expected", RENDER_TYPE, RENDER_TYPE);
         MAP.put(TYPE_MISMATCH_DUE_TO_TYPE_PROJECTIONS,
                 "Type mismatch: inferred type is {1} but {0} was expected. Projected type {2} restricts use of {3}",
-                new MultiRenderer<TypeMismatchDueToTypeProjectionsData>() {
+                new MultiRenderer1<TypeMismatchDueToTypeProjectionsData>() {
                     @NotNull
                     @Override
                     public String[] render(@NotNull TypeMismatchDueToTypeProjectionsData object) {
@@ -522,7 +521,7 @@ public class DefaultErrorMessages {
         MAP.put(MISPLACED_TYPE_PARAMETER_CONSTRAINTS, "If a type parameter has multiple constraints, they all need to be placed in the 'where' clause");
 
         MAP.put(TYPE_VARIANCE_CONFLICT, "Type parameter {0} is declared as ''{1}'' but occurs in ''{2}'' position in type {3}",
-                new MultiRenderer<VarianceConflictDiagnosticData>() {
+                new MultiRenderer1<VarianceConflictDiagnosticData>() {
                     @NotNull
                     @Override
                     public String[] render(@NotNull VarianceConflictDiagnosticData data) {
