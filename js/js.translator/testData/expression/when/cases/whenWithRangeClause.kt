@@ -21,3 +21,12 @@ fun get(value: Int): Int {
     return value
 }
 var invocationCount = 0
+
+
+class X {
+    val a = Y.foo
+
+    object Y {
+        val foo = 23
+    }
+}
