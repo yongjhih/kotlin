@@ -146,7 +146,7 @@ public final class StandardClasses {
                               @NotNull String javascriptName) {
         JsObjectScope classScope = scopeMap.get(fullQualifiedClassName);
         assert classScope != null;
-        FqNameUnsafe fullQualifiedMethodName = fullQualifiedClassName.child(Name.identifier(shortMethodName));
+        FqNameUnsafe fullQualifiedMethodName = fullQualifiedClassName.child(Name.guess(shortMethodName));
         standardObjects.put(fullQualifiedMethodName, classScope.declareName(javascriptName));
     }
 

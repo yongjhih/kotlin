@@ -83,7 +83,7 @@ class JvmNameResolver(
         return string
     }
 
-    override fun getName(index: Int) = Name.identifier(getString(index))
+    override fun getName(index: Int) = Name.guess(getString(index))
 
     override fun getClassId(index: Int): ClassId {
         val string = getString(index)

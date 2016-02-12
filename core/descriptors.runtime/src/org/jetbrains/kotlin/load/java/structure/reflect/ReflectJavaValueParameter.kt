@@ -32,7 +32,7 @@ class ReflectJavaValueParameter(
 
     override fun isDeprecatedInJavaDoc() = false
 
-    override fun getName() = name?.let(Name::identifier)
+    override fun getName() = name?.let(Name::guess)
     override fun getType() = returnType
     override fun isVararg() = isVararg
 
