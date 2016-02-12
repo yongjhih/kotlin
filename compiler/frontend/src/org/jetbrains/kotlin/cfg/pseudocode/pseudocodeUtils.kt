@@ -24,6 +24,10 @@ import org.jetbrains.kotlin.cfg.pseudocode.instructions.eval.MagicKind.*
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.jumps.ConditionalJumpInstruction
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.jumps.ReturnValueInstruction
 import org.jetbrains.kotlin.cfg.pseudocode.instructions.jumps.ThrowExceptionInstruction
+import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.LocalFunctionDeclarationInstruction
+import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.SubroutineEnterInstruction
+import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.SubroutineExitInstruction
+import org.jetbrains.kotlin.cfg.pseudocode.instructions.special.SubroutineSinkInstruction
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.LocalVariableDescriptor
 import org.jetbrains.kotlin.psi.*
@@ -287,6 +291,43 @@ fun Pseudocode.getElementValuesRecursively(element: KtElement): List<PseudoValue
     return results
 }
 
+class ErrorPseudocode internal constructor(override val correspondingElement: KtElement) : Pseudocode {
+    override val parent = null
+
+    override val localDeclarations : Set<LocalFunctionDeclarationInstruction>
+        get() = emptySet()
+
+    override val instructions: List<Instruction>
+        get() = emptyList()
+
+    override val reversedInstructions: List<Instruction>
+        get() = emptyList()
+
+    override val instructionsIncludingDeadCode: List<Instruction>
+        get() = emptyList()
+
+    override val exitInstruction: SubroutineExitInstruction
+        get() = throw UnsupportedOperationException("No exit instruction exists")
+
+    override val sinkInstruction: SubroutineSinkInstruction
+        get() = throw UnsupportedOperationException("No sink instruction exists")
+
+    override val enterInstruction: SubroutineEnterInstruction
+        get() = throw UnsupportedOperationException("No enter instruction exists")
+
+    override fun getElementValue(element: KtElement?) = null
+
+    override fun getValueElements(value: PseudoValue?) = emptyList<KtElement>()
+
+    override fun getUsages(value: PseudoValue?) = emptyList<Instruction>()
+
+    override fun isSideEffectFree(instruction: Instruction) = true
+
+    override fun copy(): Pseudocode = this
+}
+
+// Returns null if there is no appropriate container declaration
+// Return ErrorPseudocode if there is a container declaration but with syntax errors inside
 fun KtElement.getContainingPseudocode(context: BindingContext): Pseudocode? {
     val pseudocodeDeclaration =
             PsiTreeUtil.getParentOfType(this, KtDeclarationWithBody::class.java, KtClassOrObject::class.java, KtScript::class.java)
@@ -298,7 +339,7 @@ fun KtElement.getContainingPseudocode(context: BindingContext): Pseudocode? {
     } ?: pseudocodeDeclaration
 
     val enclosingPseudocode = PseudocodeUtil.generatePseudocode(enclosingPseudocodeDeclaration, context)
-    return enclosingPseudocode.getPseudocodeByElement(pseudocodeDeclaration)
+    return enclosingPseudocode.getPseudocodeByElement(pseudocodeDeclaration) ?: ErrorPseudocode(this)
 }
 
 fun Pseudocode.getPseudocodeByElement(element: KtElement): Pseudocode? {
