@@ -179,7 +179,13 @@ open class K2JVMCompiler : CLICompiler<K2JVMCompilerArguments>() {
                 KotlinToJVMBytecodeCompiler.compileModules(environment, configuration, moduleScript.modules, directory, jar, friendPaths, arguments.includeRuntime)
             }
             else if (arguments.script) {
-                val scriptArgs = arguments.freeArgs.subList(1, arguments.freeArgs.size)
+                PrintingMessageCollector.PLAIN_TEXT_TO_SYSTEM_ERR.report(
+                        CompilerMessageSeverity.WARNING,
+                        "Running a script with 'kotlinc -script foo.kts' will not be supported soon. Please use the following command instead: 'kotlin foo.kts'",
+                        CompilerMessageLocation.NO_LOCATION
+                )
+
+                val scriptArgs = arguments.freeArgs.drop(1)
                 environment = createCoreEnvironment(rootDisposable, configuration)
 
                 if (messageSeverityCollector.anyReported(CompilerMessageSeverity.ERROR)) return COMPILATION_ERROR

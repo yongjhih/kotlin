@@ -147,4 +147,37 @@ Caused by: java.lang.AssertionError: assert
 """.trim()
         )
     }
+
+    fun testScriptOK() {
+        runProcess("kotlin", "$testDataDirectory/scriptOK.kts", "OK", expectedStdout = "OK")
+    }
+
+    fun testScriptCompilationError() {
+        runProcess(
+                "kotlin",
+                "$testDataDirectory/scriptCompilationError.kts",
+                expectedExitCode = 32,
+                expectedStderr = """
+compiler/testData/launcher/scriptCompilationError.kts:1:8: error: expecting an expression
+val x =
+       ^
+""".trim()
+        )
+    }
+
+    fun testScriptException() {
+        runProcess(
+                "kotlin",
+                "$testDataDirectory/scriptException.kts",
+                expectedExitCode = 1,
+                expectedStderr = """
+Exception in thread "main" java.lang.Error
+	at ScriptException.<init>(Unknown Source)
+""".trim()
+        )
+    }
+
+    fun testKtXXXX() {
+        runProcess("kotlin", "$testDataDirectory/scriptOK.kts", "-arg1", "value", "-arg2", expectedStdout = "-arg1, value, -arg2")
+    }
 }

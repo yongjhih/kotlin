@@ -77,7 +77,7 @@ object Main {
                 collectingArguments = true
             }
             else if (arg.endsWith(".kts")) {
-                runner = ScriptRunner(arg)
+                runner = ScriptRunner(KOTLIN_HOME, arg)
                 collectingArguments = true
             }
             else {
@@ -109,6 +109,14 @@ object Main {
             System.exit(1)
         }
         catch (e: Throwable) {
+            // TODO: use a class accessible both from kotlin-compiler.jar and kotlin-runner.jar, get rid of FQ name
+            if (e.javaClass.canonicalName == "org.jetbrains.kotlin.cli.jvm.ScriptRunner.CompilationError") {
+                // If there was an error during compilation of a script, all the diagnostics have been already printed out,
+                // so the only thing that is required now is to exit with a non-zero exit code.
+                // 32 is just a number different from 1, to distinguish script compilation errors vs script execution errors
+                System.exit(32)
+            }
+
             @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
             for (exception in generateSequence(e, Throwable::cause)) {
                 // The cast is needed because of KT-10887
@@ -134,8 +142,8 @@ where command may be one of:
   foo.Bar                    Runs the 'main' function from the class with the given qualified name
   app.jar                    Runs the given JAR file as 'java -jar' would do
                              (-classpath argument is ignored and no Kotlin runtime is added to the classpath)
+  script.kts                 Compiles and runs the given script
 """ +
-//  script.kts                 Compiles and runs the given script
 //  -expression (-e) '2+2'     Evaluates the expression and prints the result
 """and possible options include:
   -classpath (-cp) <path>    Paths where to find user class files

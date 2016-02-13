@@ -2,4 +2,7 @@ OUT:
 hi
 there
 
+ERR:
+warning: running a script with 'kotlinc -script foo.kts' will not be supported soon. Please use the following command instead: 'kotlin foo.kts'
+
 Return code: 0

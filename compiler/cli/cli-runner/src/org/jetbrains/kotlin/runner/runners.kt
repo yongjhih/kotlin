@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.runner
 import java.io.File
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.net.URLClassLoader
 import java.util.jar.Attributes
@@ -97,25 +98,43 @@ class JarRunner(private val path: String) : AbstractRunner() {
     }
 }
 
-class ReplRunner(private val home: File) : Runner {
-    override fun run(classpath: Classpath, arguments: List<String>) {
-        require(arguments.isEmpty()) { "REPL runner cannot be instantiated with arguments" }
+abstract class CompilerRunner(private val home: File) : Runner {
+    private val preloaderMain: Method
 
+    init {
         val preloaderJar = File(home, "lib/kotlin-preloader.jar")
         val preloader = URLClassLoader(arrayOf(preloaderJar.toURI().toURL()), null).loadClass("org.jetbrains.kotlin.preloading.Preloader")
-        val main = preloader.getDeclaredMethod("main", Array<String>::class.java)
-        val args = listOf(
-                "-cp", File(home, "lib/kotlin-compiler.jar").path,
-                "org.jetbrains.kotlin.cli.jvm.repl.ReplFromTerminal"
-        ) + classpath.files.map(File::getPath)
-        main(null, args.toTypedArray())
+        preloaderMain = preloader.getDeclaredMethod("main", Array<String>::class.java)
+    }
+
+    protected fun runCompilerClass(fqName: String, arguments: List<String>) {
+        val args = listOf("-cp", File(home, "lib/kotlin-compiler.jar").path) + listOf(fqName) + arguments
+        preloaderMain(null, args.toTypedArray())
     }
 }
 
-class ScriptRunner(private val path: String) : Runner {
+class ReplRunner(home: File) : CompilerRunner(home) {
     override fun run(classpath: Classpath, arguments: List<String>) {
-        // TODO
-        throw RunnerException("running Kotlin scripts is not yet supported")
+        require(arguments.isEmpty()) { "REPL runner cannot be instantiated with arguments" }
+
+        runCompilerClass("org.jetbrains.kotlin.cli.jvm.repl.ReplFromTerminal", classpath.files.map(File::getPath))
+    }
+}
+
+class ScriptRunner(home: File, private val scriptPath: String) : CompilerRunner(home) {
+    override fun run(classpath: Classpath, arguments: List<String>) {
+        try {
+            runCompilerClass(
+                    "org.jetbrains.kotlin.cli.jvm.ScriptRunner",
+                    listOf(scriptPath, classpath.files.joinToString(separator = File.pathSeparator, transform = File::getPath)) +
+                    arguments
+            )
+        }
+        catch (e: InvocationTargetException) {
+            // Unwrapping exception one more time here because Preloader also invokes the compiler via reflection
+            (e.targetException as? InvocationTargetException)?.let { throw it.targetException }
+            throw e.targetException
+        }
     }
 }
 
