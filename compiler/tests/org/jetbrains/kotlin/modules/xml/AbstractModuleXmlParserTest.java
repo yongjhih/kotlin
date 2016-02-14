@@ -23,9 +23,9 @@ import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocation;
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity;
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector;
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer;
-import org.jetbrains.kotlin.modules.Module;
 import org.jetbrains.kotlin.cli.common.modules.ModuleScriptData;
 import org.jetbrains.kotlin.cli.common.modules.ModuleXmlParser;
+import org.jetbrains.kotlin.modules.Module;
 import org.jetbrains.kotlin.test.KotlinTestUtils;
 
 import java.io.File;
@@ -42,6 +42,11 @@ public abstract class AbstractModuleXmlParserTest extends TestCase {
                     @NotNull CompilerMessageSeverity severity, @NotNull String message, @NotNull CompilerMessageLocation location
             ) {
                 throw new AssertionError(MessageRenderer.PLAIN_FULL_PATHS.render(severity, message, location));
+            }
+
+            @Override
+            public boolean hasErrors() {
+                throw new UnsupportedOperationException();
             }
         });
 

@@ -18,7 +18,9 @@ package org.jetbrains.kotlin.cli.jvm
 
 import com.intellij.openapi.util.Disposer
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
-import org.jetbrains.kotlin.cli.common.messages.*
+import org.jetbrains.kotlin.cli.common.messages.GroupingMessageCollector
+import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinToJVMBytecodeCompiler
@@ -44,7 +46,6 @@ object ScriptRunner {
         val messageCollector = GroupingMessageCollector(PrintingMessageCollector(
                 System.err, MessageRenderer.PLAIN_RELATIVE_PATHS, /* verbose = */ false
         ))
-        val messageSeverityCollector = MessageSeverityCollector(messageCollector)
 
         val configuration = CompilerConfiguration().apply {
             put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector)
@@ -64,7 +65,7 @@ object ScriptRunner {
         )
 
         val scriptClass = try {
-            if (messageSeverityCollector.anyReported(CompilerMessageSeverity.ERROR)) throw CompilationError()
+            if (messageCollector.hasErrors()) throw CompilationError()
 
             KotlinToJVMBytecodeCompiler.compileScript(configuration, kotlinPaths, environment) ?: throw CompilationError()
         }
