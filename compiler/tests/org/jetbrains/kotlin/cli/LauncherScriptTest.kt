@@ -180,4 +180,28 @@ Exception in thread "main" java.lang.Error
     fun testKtXXXX() {
         runProcess("kotlin", "$testDataDirectory/scriptOK.kts", "-arg1", "value", "-arg2", expectedStdout = "-arg1, value, -arg2")
     }
+
+    fun testExpressionOK() {
+        runProcess("kotlin", "-expression", "2+2", expectedStdout = "4")
+    }
+
+    fun testExpressionCompilationError() {
+        runProcess(
+                "kotlin", "-e", "val x =",
+                expectedExitCode = 32,
+                expectedStderr = """
+error: expecting an expression
+val x =
+       ^
+""".trim())
+    }
+
+    fun testExpressionException() {
+        runProcess(
+                "kotlin", "-e", """throw IllegalStateException("error")""",
+                expectedExitCode = 1,
+                expectedStderr = """
+java.lang.IllegalStateException: error
+""".trim())
+    }
 }

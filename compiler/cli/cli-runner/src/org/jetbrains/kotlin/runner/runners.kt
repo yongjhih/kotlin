@@ -123,24 +123,34 @@ class ReplRunner(home: File) : CompilerRunner(home) {
 
 class ScriptRunner(home: File, private val scriptPath: String) : CompilerRunner(home) {
     override fun run(classpath: Classpath, arguments: List<String>) {
-        try {
+        unwrapInvocationTargetTwice {
             runCompilerClass(
                     "org.jetbrains.kotlin.cli.jvm.ScriptRunner",
                     listOf(scriptPath, classpath.files.joinToString(separator = File.pathSeparator, transform = File::getPath)) +
                     arguments
             )
         }
+    }
+}
+
+class ExpressionRunner(home: File, private val code: String) : CompilerRunner(home) {
+    override fun run(classpath: Classpath, arguments: List<String>) {
+        unwrapInvocationTargetTwice {
+            // TODO: make the rest of the arguments available in the expression or warn that they are ignored
+            runCompilerClass(
+                    "org.jetbrains.kotlin.cli.jvm.ExpressionRunner",
+                    listOf(code, classpath.files.joinToString(separator = File.pathSeparator, transform = File::getPath))
+            )
+        }
+    }
+}
+
+inline fun unwrapInvocationTargetTwice(block: () -> Unit) =
+        try {
+            block()
+        }
         catch (e: InvocationTargetException) {
             // Unwrapping exception one more time here because Preloader also invokes the compiler via reflection
             (e.targetException as? InvocationTargetException)?.let { throw it.targetException }
             throw e.targetException
         }
-    }
-}
-
-class ExpressionRunner(private val code: String) : Runner {
-    override fun run(classpath: Classpath, arguments: List<String>) {
-        // TODO
-        throw RunnerException("evaluating expressions is not yet supported")
-    }
-}

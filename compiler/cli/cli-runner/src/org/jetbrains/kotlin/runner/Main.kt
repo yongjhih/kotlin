@@ -66,7 +66,7 @@ object Main {
                 classpath.add(next())
             }
             else if ("-expression" == arg || "-e" == arg) {
-                runner = ExpressionRunner(next())
+                runner = ExpressionRunner(KOTLIN_HOME, next())
                 collectingArguments = true
             }
             else if (arg.startsWith("-")) {
@@ -143,9 +143,8 @@ where command may be one of:
   app.jar                    Runs the given JAR file as 'java -jar' would do
                              (-classpath argument is ignored and no Kotlin runtime is added to the classpath)
   script.kts                 Compiles and runs the given script
-""" +
-//  -expression (-e) '2+2'     Evaluates the expression and prints the result
-"""and possible options include:
+  -expression (-e) '2+2'     Evaluates the expression and prints the result
+and possible options include:
   -classpath (-cp) <path>    Paths where to find user class files
   -Dname=value               Set a system JVM property
   -J<option>                 Pass an option directly to JVM

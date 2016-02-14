@@ -204,8 +204,8 @@ class ReplInterpreter(
                 return error(errorText, LineResultType.RUNTIME_ERROR)
             }
 
-            fun incomplete(): LineResult {
-                return LineResult(null, false, null, LineResultType.INCOMPLETE)
+            fun incomplete(errorText: String): LineResult {
+                return LineResult(null, false, errorText, LineResultType.INCOMPLETE)
             }
         }
     }
@@ -238,7 +238,7 @@ class ReplInterpreter(
             }
             else {
                 previousIncompleteLines.add(line)
-                LineResult.incomplete()
+                LineResult.incomplete(errorHolder.renderedDiagnostics)
             }
         }
 
