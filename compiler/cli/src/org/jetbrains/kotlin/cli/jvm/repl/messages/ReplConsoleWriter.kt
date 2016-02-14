@@ -28,9 +28,9 @@ class ReplConsoleWriter : ReplWriter {
 
     override fun printlnWelcomeMessage(x: String) = println(x)
     override fun printlnHelpMessage(x: String) = println(x)
-    override fun outputCompileError(x: String) = println(x)
+    override fun outputCompileError(x: String) = println(x.trimEnd())
     override fun outputCommandResult(x: Any?) = println(x)
-    override fun outputRuntimeError(x: String) = println(x)
+    override fun outputRuntimeError(x: String) = println(x.trimEnd())
 
     override fun notifyReadLineStart() {}
     override fun notifyReadLineEnd() {}
