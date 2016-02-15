@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.resolve.constants
 
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
+import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.types.*
 
@@ -36,13 +37,16 @@ interface CompileTimeConstant<out T> {
 
     val usesNonConstValAsConstant: Boolean get() = parameters.usesNonConstValAsConstant
 
+    val usedConstVariables: Set<VariableDescriptor> get() = parameters.usedConstVariables
+
     val isPure: Boolean get() = parameters.isPure
 
     class Parameters(
             val canBeUsedInAnnotation: Boolean,
             val isPure: Boolean,
             val usesVariableAsConstant: Boolean,
-            val usesNonConstValAsConstant: Boolean
+            val usesNonConstValAsConstant: Boolean,
+            val usedConstVariables: Set<VariableDescriptor> = emptySet()
     )
 }
 
