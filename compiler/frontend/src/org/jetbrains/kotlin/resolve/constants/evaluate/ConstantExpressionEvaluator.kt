@@ -314,6 +314,7 @@ private class ConstantExpressionEvaluatorVisitor(
         var canBeUsedInAnnotation = true
         var usesVariableAsConstant = false
         var usesNonConstantVariableAsConstant = false
+        var usedConstVariables = emptySet<VariableDescriptor>()
         for (entry in expression.entries) {
             val constant = stringExpressionEvaluator.evaluate(entry)
             if (constant == null) {
@@ -324,6 +325,7 @@ private class ConstantExpressionEvaluatorVisitor(
                 if (!constant.canBeUsedInAnnotations) canBeUsedInAnnotation = false
                 if (constant.usesVariableAsConstant) usesVariableAsConstant = true
                 if (constant.usesNonConstValAsConstant) usesNonConstantVariableAsConstant = true
+                usedConstVariables += constant.usedConstVariables
                 sb.append(constant.constantValue.value)
             }
         }
@@ -335,7 +337,8 @@ private class ConstantExpressionEvaluatorVisitor(
                             isPure = false,
                             canBeUsedInAnnotation = canBeUsedInAnnotation,
                             usesVariableAsConstant = usesVariableAsConstant,
-                            usesNonConstValAsConstant = usesNonConstantVariableAsConstant
+                            usesNonConstValAsConstant = usesNonConstantVariableAsConstant,
+                            usedConstVariables = usedConstVariables
                     )
             )
         else null
@@ -389,7 +392,8 @@ private class ConstantExpressionEvaluatorVisitor(
                             canBeUsedInAnnotation = true,
                             isPure = false,
                             usesVariableAsConstant = leftConstant.usesVariableAsConstant || rightConstant.usesVariableAsConstant,
-                            usesNonConstValAsConstant = leftConstant.usesNonConstValAsConstant || rightConstant.usesNonConstValAsConstant
+                            usesNonConstValAsConstant = leftConstant.usesNonConstValAsConstant || rightConstant.usesNonConstValAsConstant,
+                            usedConstVariables = leftConstant.usedConstVariables + rightConstant.usedConstVariables
                     )
             )
         }
@@ -413,6 +417,7 @@ private class ConstantExpressionEvaluatorVisitor(
             val canBeUsedInAnnotation = canBeUsedInAnnotation(argumentForReceiver.expression)
             val usesVariableAsConstant = usesVariableAsConstant(argumentForReceiver.expression)
             val usesNonConstValAsConstant = usesNonConstValAsConstant(argumentForReceiver.expression)
+            val usedConstVariables = usedConstVariables(argumentForReceiver.expression)
             val isNumberConversionMethod = resultingDescriptorName in OperatorConventions.NUMBER_CONVERSIONS
             return createConstant(
                     result,
@@ -420,7 +425,7 @@ private class ConstantExpressionEvaluatorVisitor(
                     CompileTimeConstant.Parameters(
                             canBeUsedInAnnotation,
                             !isNumberConversionMethod && isArgumentPure,
-                            usesVariableAsConstant, usesNonConstValAsConstant)
+                            usesVariableAsConstant, usesNonConstValAsConstant, usedConstVariables)
             )
         }
         else if (argumentsEntrySet.size == 1) {
@@ -439,7 +444,8 @@ private class ConstantExpressionEvaluatorVisitor(
             val canBeUsedInAnnotation = canBeUsedInAnnotation(argumentForReceiver.expression) && canBeUsedInAnnotation(argumentForParameter.expression)
             val usesVariableAsConstant = usesVariableAsConstant(argumentForReceiver.expression) || usesVariableAsConstant(argumentForParameter.expression)
             val usesNonConstValAsConstant = usesNonConstValAsConstant(argumentForReceiver.expression) || usesNonConstValAsConstant(argumentForParameter.expression)
-            val parameters = CompileTimeConstant.Parameters(canBeUsedInAnnotation, areArgumentsPure, usesVariableAsConstant, usesNonConstValAsConstant)
+            val usedConstVariables = usedConstVariables(argumentForReceiver.expression) + usedConstVariables(argumentForParameter.expression)
+            val parameters = CompileTimeConstant.Parameters(canBeUsedInAnnotation, areArgumentsPure, usesVariableAsConstant, usesNonConstValAsConstant, usedConstVariables)
             return when (resultingDescriptorName) {
                 OperatorNameConventions.COMPARE_TO -> createCompileTimeConstantForCompareTo(result, callExpression, factory)?.wrap(parameters)
                 OperatorNameConventions.EQUALS -> createCompileTimeConstantForEquals(result, callExpression, factory)?.wrap(parameters)
@@ -459,6 +465,8 @@ private class ConstantExpressionEvaluatorVisitor(
     private fun canBeUsedInAnnotation(expression: KtExpression) = ConstantExpressionEvaluator.getConstant(expression, trace.bindingContext)?.canBeUsedInAnnotations ?: false
 
     private fun isPureConstant(expression: KtExpression) = ConstantExpressionEvaluator.getConstant(expression, trace.bindingContext)?.isPure ?: false
+
+    private fun usedConstVariables(expression: KtExpression) = ConstantExpressionEvaluator.getConstant(expression, trace.bindingContext)?.usedConstVariables ?: emptySet()
 
     private fun evaluateUnaryAndCheck(receiver: OperationArgument, name: String, callExpression: KtExpression): Any? {
         val functions = unaryOperations[UnaryOperationKey(receiver.ctcType, name)] ?: return null
@@ -542,7 +550,8 @@ private class ConstantExpressionEvaluatorVisitor(
                                 canBeUsedInAnnotation = isPropertyCompileTimeConstant(callableDescriptor),
                                 isPure = false,
                                 usesVariableAsConstant = true,
-                                usesNonConstValAsConstant = !callableDescriptor.isConst
+                                usesNonConstValAsConstant = !callableDescriptor.isConst,
+                                usedConstVariables = if (callableDescriptor.isConst) setOf(callableDescriptor) else emptySet()
                         )
                 )
             }
@@ -745,9 +754,10 @@ private class ConstantExpressionEvaluatorVisitor(
             canBeUsedInAnnotation: Boolean = this !is NullValue,
             isPure: Boolean = false,
             usesVariableAsConstant: Boolean = false,
-            usesNonConstValAsConstant: Boolean = false
+            usesNonConstValAsConstant: Boolean = false,
+            usedConstVariables: Set<VariableDescriptor> = emptySet()
     ): TypedCompileTimeConstant<T>
-            = wrap(CompileTimeConstant.Parameters(canBeUsedInAnnotation, isPure, usesVariableAsConstant, usesNonConstValAsConstant))
+            = wrap(CompileTimeConstant.Parameters(canBeUsedInAnnotation, isPure, usesVariableAsConstant, usesNonConstValAsConstant, usedConstVariables))
 }
 
 private fun hasLongSuffix(text: String) = text.endsWith('l') || text.endsWith('L')
