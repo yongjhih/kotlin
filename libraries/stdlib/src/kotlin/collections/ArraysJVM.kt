@@ -29,7 +29,7 @@ public inline fun <reified T> Collection<T>.toTypedArray(): Array<T> {
 public inline fun <reified T> Array<out T>?.orEmpty(): Array<out T> = this ?: arrayOf<T>()
 
 /** Internal unsafe construction of array based on reference array type */
-@Suppress("UNCHECKED_CAST")
 internal fun <T> arrayOfNulls(reference: Array<T>, size: Int): Array<T> {
+    @Suppress("UNCHECKED_CAST")
     return java.lang.reflect.Array.newInstance(reference.javaClass.componentType, size) as Array<T>
 }

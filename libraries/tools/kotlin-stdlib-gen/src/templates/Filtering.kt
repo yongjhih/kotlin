@@ -505,6 +505,7 @@ fun filtering(): List<GenericFunction> {
         returns(Sequences) { "Sequence<T>" }
         body(Sequences) {
             """
+            @Suppress("UNCHECKED_CAST")
             return filterNot { it == null } as Sequence<T>
             """
         }
