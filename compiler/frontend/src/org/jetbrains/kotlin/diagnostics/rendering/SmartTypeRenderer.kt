@@ -32,7 +32,7 @@ class SmartTypeRenderer(private val basicRenderer: DescriptorRenderer) : SmartRe
         val smartRenderer = basicRenderer.withOptions {
             nameShortness = object : NameShortness {
                 override fun renderClassifier(classifier: ClassifierDescriptor, renderer: DescriptorRenderer): String {
-                    val uniqueName = (byName[classifier.name]?.size ?: 0) > 1
+                    val uniqueName = (byName[classifier.name]?.size ?: 0) <= 1
                     return when {
                     //TODO_R:
                         uniqueName -> NameShortness.SHORT.renderClassifier(classifier, renderer)
