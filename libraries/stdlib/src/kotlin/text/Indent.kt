@@ -31,7 +31,7 @@ public fun String.trimMargin(marginPrefix: String = "|"): String =
  * Detects indent by [marginPrefix] as it does [trimMargin] and replace it with [newIndent]
  */
 public fun String.replaceIndentByMargin(newIndent: String = "", marginPrefix: String = "|"): String {
-    require(marginPrefix.isNotBlank()) { "marginPrefix should be non blank string but it is '$marginPrefix'" }
+    require(marginPrefix.isNotBlank()) { "marginPrefix should be non blank string but it is '$marginPrefix'." }
     val lines = lines()
 
     return lines.reindent(length + newIndent.length * lines.size, getIndentFunction(newIndent), { line ->
