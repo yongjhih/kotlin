@@ -71,6 +71,7 @@ import org.jetbrains.kotlin.resolve.calls.util.FakeCallableDescriptorForObject;
 import org.jetbrains.kotlin.resolve.constants.CompileTimeConstant;
 import org.jetbrains.kotlin.resolve.constants.ConstantValue;
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator;
+import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluatorKt;
 import org.jetbrains.kotlin.resolve.descriptorUtil.DescriptorUtilsKt;
 import org.jetbrains.kotlin.resolve.inline.InlineUtil;
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKt;
@@ -1249,17 +1250,22 @@ public class ExpressionCodegen extends KtVisitor<StackValue, StackValue> impleme
     public static ConstantValue<?> getCompileTimeConstant(
             @NotNull KtExpression expression,
             @NotNull BindingContext bindingContext,
-            boolean takeUpConstValsAsConst
+            boolean forAnnotation
     ) {
         CompileTimeConstant<?> compileTimeValue = ConstantExpressionEvaluator.getConstant(expression, bindingContext);
         if (compileTimeValue == null || compileTimeValue.getUsesNonConstValAsConstant()) {
             return null;
         }
 
-        if (!takeUpConstValsAsConst && compileTimeValue.getUsesVariableAsConstant()) {
-            for (VariableDescriptor descriptor : compileTimeValue.getUsedConstVariables()) {
-                if (!JvmCodegenUtil.isInlinedJavaConstProperty(descriptor)) {
-                    return null;
+        if (!forAnnotation) {
+            if (ConstantExpressionEvaluatorKt.isClassLiteralOrEnumEntry(compileTimeValue)) {
+                return null;
+            }
+            if (compileTimeValue.getUsesVariableAsConstant()) {
+                for (VariableDescriptor descriptor : compileTimeValue.getUsedConstVariables()) {
+                    if (!JvmCodegenUtil.isInlinedJavaConstProperty(descriptor)) {
+                        return null;
+                    }
                 }
             }
         }
