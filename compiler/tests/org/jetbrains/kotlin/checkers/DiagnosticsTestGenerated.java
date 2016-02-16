@@ -1163,6 +1163,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                     doTest(fileName);
                 }
 
+                @TestMetadata("nonPrimitiveInExpression.kt")
+                public void testNonPrimitiveInExpression() throws Exception {
+                    String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/annotationParameterMustBeConstant/nonPrimitiveInExpression.kt");
+                    doTest(fileName);
+                }
+
                 @TestMetadata("strings.kt")
                 public void testStrings() throws Exception {
                     String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/annotationParameterMustBeConstant/strings.kt");
