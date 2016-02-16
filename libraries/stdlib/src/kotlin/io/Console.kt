@@ -179,3 +179,10 @@ private val stdin: BufferedReader by lazy { BufferedReader(InputStreamReader(obj
  * @return the line read or `null` if the input stream is redirected to a file and the end of file has been reached.
  */
 public fun readLine(): String? = stdin.readLine()
+
+/**
+ * Reads text of input from the standard input stream.
+ *
+ * @return the text read or `null` if the input stream is redirected to a file and the end of file has been reached.
+ */
+public fun readText(): String? = stdin.readText()
